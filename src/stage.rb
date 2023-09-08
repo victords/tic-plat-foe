@@ -30,6 +30,8 @@ class Stage
     @marks = [
       Mark.new(:circle, 10, 8),
       Mark.new(:circle, 10, 6),
+      Mark.new(:circle, 10, 5),
+      Mark.new(:circle, 14, 10),
     ]
     @character = Character.new
     @start_point = Vector.new(2, 12)
@@ -45,7 +47,52 @@ class Stage
 
   def update
     @character.update(self)
-    @marks.each { |m| m.update(self) }
+    marks_by_tile = Array.new(@map.size.x) { Array.new(@map.size.y) }
+    @marks.each do |m|
+      m.update(self)
+      marks_by_tile[m.tile.x][m.tile.y] = m.type if m.tile
+    end
+
+    (0...@map.size.x).each do |i|
+      last_type = nil
+      last_count = 0
+      (0...@map.size.y).each do |j|
+        if marks_by_tile[i][j]
+          if marks_by_tile[i][j] != last_type
+            last_type = marks_by_tile[i][j]
+            last_count = 1
+          else
+            last_count += 1
+            if last_count == 3
+              puts 'win'
+            end
+          end
+        else
+          last_type = nil
+          last_count = 0
+        end
+      end
+    end
+    (0...@map.size.y).each do |j|
+      last_type = nil
+      last_count = 0
+      (0...@map.size.x).each do |i|
+        if marks_by_tile[i][j]
+          if marks_by_tile[i][j] != last_type
+            last_type = marks_by_tile[i][j]
+            last_count = 1
+          else
+            last_count += 1
+            if last_count == 3
+              puts 'win'
+            end
+          end
+        else
+          last_type = nil
+          last_count = 0
+        end
+      end
+    end
   end
 
   def draw
