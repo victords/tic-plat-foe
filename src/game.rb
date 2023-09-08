@@ -4,6 +4,7 @@ class Game
   class << self
     def init
       @stage = Stage.new
+      @stage.start
     end
 
     def update

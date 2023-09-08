@@ -1,8 +1,11 @@
 require_relative 'constants'
+require_relative 'mark'
 
 include MiniGL
 
 class Character < GameObject
+  include Pusher
+
   MOVE_FORCE = 0.5
   JUMP_FORCE = 12
   FRICTION_FACTOR = 0.1
@@ -11,6 +14,11 @@ class Character < GameObject
     super(0, 0, TILE_SIZE - 8, TILE_SIZE - 8, :circle, Vector.new(-4, -8))
     @max_speed.x = 8
     @jump_timer = 0
+  end
+
+  def move_to(i, j)
+    @x = i * TILE_SIZE + 4
+    @y = j * TILE_SIZE + 8
   end
 
   def update(stage)
@@ -32,7 +40,7 @@ class Character < GameObject
       forces.y -= JUMP_FORCE
     end
 
-    move(forces, stage.obstacles, [])
+    move_pushing(forces, stage)
   end
 
   def draw
