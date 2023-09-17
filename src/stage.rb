@@ -17,21 +17,17 @@ class Stage
       Block.new(SCREEN_WIDTH, 0, 1, SCREEN_HEIGHT),
     ]
     (13..15).each do |j|
-      (0..19).each do |i|
+      (0..16).each do |i|
         @blocks << Block.new(i * TILE_SIZE, j * TILE_SIZE, TILE_SIZE, TILE_SIZE)
       end
     end
-    (4..6).each do |j|
-      (13..14).each do |i|
-        @blocks << Block.new(i * TILE_SIZE, j * TILE_SIZE, TILE_SIZE, TILE_SIZE)
-      end
-    end
-    @blocks << Block.new(3 * TILE_SIZE, 12 * TILE_SIZE, TILE_SIZE, TILE_SIZE)
+    @blocks << Block.new(17 * TILE_SIZE, 14 * TILE_SIZE, TILE_SIZE, TILE_SIZE)
+    @blocks << Block.new(18 * TILE_SIZE, 13 * TILE_SIZE, TILE_SIZE, TILE_SIZE)
+    @blocks << Block.new(19 * TILE_SIZE, 12 * TILE_SIZE, TILE_SIZE, TILE_SIZE)
     @marks = [
-      Mark.new(:circle, 10, 8),
-      Mark.new(:circle, 10, 6),
-      Mark.new(:circle, 10, 5),
-      Mark.new(:circle, 14, 10),
+      Mark.new(:circle, 17, 0),
+      Mark.new(:circle, 18, 0),
+      Mark.new(:circle, 19, 0),
     ]
     @character = Character.new
     @start_point = Vector.new(2, 12)
@@ -45,54 +41,65 @@ class Stage
     @blocks + @marks + [@character]
   end
 
+  def check_victory(marks_by_tile)
+    marks_by_tile.flatten.compact.each do |mark|
+      # left to right
+      i0 = [mark.tile.x - 2, 0].max
+      i1 = [mark.tile.x + 2, @map.size.x - 1].min - 2
+      (i0..i1).each do |i|
+        if marks_by_tile[i][mark.tile.y]&.type == marks_by_tile[i + 1][mark.tile.y]&.type &&
+           marks_by_tile[i][mark.tile.y]&.type == marks_by_tile[i + 2][mark.tile.y]&.type
+          return true
+        end
+      end
+
+      # top to bottom
+      j0 = [mark.tile.y - 2, 0].max
+      j1 = [mark.tile.y + 2, @map.size.y - 1].min - 2
+      (j0..j1).each do |j|
+        if marks_by_tile[mark.tile.x][j]&.type == marks_by_tile[mark.tile.x][j + 1]&.type &&
+           marks_by_tile[mark.tile.x][j]&.type == marks_by_tile[mark.tile.x][j + 2]&.type
+          return true
+        end
+      end
+
+      # top-left to bottom-right
+      steps_left = [[mark.tile.x, mark.tile.y].min, 2].min
+      i0 = mark.tile.x - steps_left
+      j0 = mark.tile.y - steps_left
+      steps_right = [[@map.size.x - 1 - mark.tile.x, @map.size.y - 1 - mark.tile.y].min, 2].min
+      i1 = mark.tile.x + steps_right - 2
+      (i0..i1).each_with_index do |i, index|
+        if marks_by_tile[i][j0 + index]&.type == marks_by_tile[i + 1][j0 + index + 1]&.type &&
+           marks_by_tile[i][j0 + index]&.type == marks_by_tile[i + 2][j0 + index + 2]&.type
+          return true
+        end
+      end
+
+      # bottom-left to top-right
+      steps_left = [[mark.tile.x, @map.size.y - 1 - mark.tile.y].min, 2].min
+      i0 = mark.tile.x - steps_left
+      j0 = mark.tile.y - steps_left
+      steps_right = [[@map.size.x - 1 - mark.tile.x, mark.tile.y].min, 2].min
+      i1 = mark.tile.x + steps_right - 2
+      (i0..i1).each_with_index do |i, index|
+        if marks_by_tile[i][j0 + index]&.type == marks_by_tile[i + 1][j0 + index - 1]&.type &&
+           marks_by_tile[i][j0 + index]&.type == marks_by_tile[i + 2][j0 + index - 2]&.type
+          return true
+        end
+      end
+    end
+    false
+  end
+
   def update
     @character.update(self)
     marks_by_tile = Array.new(@map.size.x) { Array.new(@map.size.y) }
     @marks.each do |m|
       m.update(self)
-      marks_by_tile[m.tile.x][m.tile.y] = m.type if m.tile
+      marks_by_tile[m.tile.x][m.tile.y] = m if m.tile
     end
-
-    (0...@map.size.x).each do |i|
-      last_type = nil
-      last_count = 0
-      (0...@map.size.y).each do |j|
-        if marks_by_tile[i][j]
-          if marks_by_tile[i][j] != last_type
-            last_type = marks_by_tile[i][j]
-            last_count = 1
-          else
-            last_count += 1
-            if last_count == 3
-              puts 'win'
-            end
-          end
-        else
-          last_type = nil
-          last_count = 0
-        end
-      end
-    end
-    (0...@map.size.y).each do |j|
-      last_type = nil
-      last_count = 0
-      (0...@map.size.x).each do |i|
-        if marks_by_tile[i][j]
-          if marks_by_tile[i][j] != last_type
-            last_type = marks_by_tile[i][j]
-            last_count = 1
-          else
-            last_count += 1
-            if last_count == 3
-              puts 'win'
-            end
-          end
-        else
-          last_type = nil
-          last_count = 0
-        end
-      end
-    end
+    puts 'won' if check_victory(marks_by_tile)
   end
 
   def draw
