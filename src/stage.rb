@@ -22,12 +22,9 @@ class Stage
       end
     end
     @blocks << Block.new(11 * TILE_SIZE, 12 * TILE_SIZE, TILE_SIZE, TILE_SIZE)
-    @blocks << Block.new(10 * TILE_SIZE, 11 * TILE_SIZE, TILE_SIZE, TILE_SIZE)
-    @blocks << Block.new(10 * TILE_SIZE, 12 * TILE_SIZE, TILE_SIZE, TILE_SIZE)
     @marks = [
-      Mark.new(:circle, 10, 0),
-      Mark.new(:circle, 11, 0),
-      Mark.new(:circle, 12, 0),
+      Mark.new(:circle, 9, 0),
+      Mark.new(:circle, 9, 1),
     ]
     @character = Character.new
     @start_point = Vector.new(2, 12)
@@ -99,7 +96,8 @@ class Stage
       m.update(self)
       marks_by_tile[m.tile.x][m.tile.y] = m if m.tile
     end
-    puts check_victory(marks_by_tile)
+    result = check_victory(marks_by_tile)
+    puts result if result
   end
 
   def draw
