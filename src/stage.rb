@@ -10,24 +10,36 @@ class Stage
 
   attr_reader :marks
 
-  def initialize
+  def initialize(id)
     @map = Map.new(TILE_SIZE, TILE_SIZE, SCREEN_WIDTH / TILE_SIZE, SCREEN_HEIGHT / TILE_SIZE, SCREEN_WIDTH, SCREEN_HEIGHT)
     @blocks = [
       Block.new(-1, 0, 1, SCREEN_HEIGHT),
       Block.new(SCREEN_WIDTH, 0, 1, SCREEN_HEIGHT),
     ]
-    (13..15).each do |j|
-      (0..19).each do |i|
-        @blocks << Block.new(i * TILE_SIZE, j * TILE_SIZE, TILE_SIZE, TILE_SIZE)
+    @marks = []
+    @character = Character.new
+
+    File.open("#{Res.prefix}stage/#{id}") do |f|
+      i = 0
+      j = 0
+      f.read.each_line do |line|
+        line.each_char do |char|
+          case char
+          when 's'
+            @start_point = Vector.new(i, j)
+          when '#'
+            @blocks << Block.new(i * TILE_SIZE, j * TILE_SIZE, TILE_SIZE, TILE_SIZE)
+          when 'o'
+            @marks << Mark.new(:circle, i, j)
+          when 'x'
+            @marks << Mark.new(:x, i, j)
+          end
+          i += 1
+        end
+        j += 1
+        i = 0
       end
     end
-    @blocks << Block.new(11 * TILE_SIZE, 12 * TILE_SIZE, TILE_SIZE, TILE_SIZE)
-    @marks = [
-      Mark.new(:circle, 9, 0),
-      Mark.new(:circle, 9, 1),
-    ]
-    @character = Character.new
-    @start_point = Vector.new(2, 12)
   end
 
   def start

@@ -3,7 +3,7 @@ require_relative 'stage'
 class Game
   class << self
     def init
-      @stage = Stage.new
+      @stage = Stage.new(1)
       @stage.start
     end
 
