@@ -15,7 +15,7 @@ class Character < GameObject
   }.freeze
 
   def initialize
-    super(0, 0, TILE_SIZE - 8, TILE_SIZE - 8, :circle, Vector.new(-4, -8))
+    super(0, 0, TILE_SIZE - 4, TILE_SIZE - 8, :circle, Vector.new(-2, -8))
     @max_speed.x = 8
     @jump_timer = 0
 
@@ -26,7 +26,7 @@ class Character < GameObject
   end
 
   def move_to(i, j)
-    @x = i * TILE_SIZE + 4
+    @x = i * TILE_SIZE + 2
     @y = j * TILE_SIZE + 8
   end
 

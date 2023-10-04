@@ -7,12 +7,12 @@ class Mark < GameObject
   include Pusher
 
   ROW_THRESHOLD = 1
-  COLUMN_THRESHOLD = 4
+  COLUMN_THRESHOLD = 6
 
   attr_reader :type, :tile
 
   def initialize(type, i, j)
-    super(i * TILE_SIZE, j * TILE_SIZE, TILE_SIZE, TILE_SIZE, type)
+    super(i * TILE_SIZE + 1, j * TILE_SIZE, TILE_SIZE - 2, TILE_SIZE, type, Vector.new(-1, 0))
     @type = type
     @color = case type
              when :circle then 0x3333cc
