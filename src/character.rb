@@ -10,15 +10,38 @@ class Character < GameObject
   JUMP_FORCE = 12
   FRICTION_FACTOR = 0.1
 
+  FRAME_COUNT = {
+    idle: 60,
+  }.freeze
+
   def initialize
     super(0, 0, TILE_SIZE - 8, TILE_SIZE - 8, :circle, Vector.new(-4, -8))
     @max_speed.x = 8
     @jump_timer = 0
+
+    @animation_state = :idle
+    @animation_frame = 0
+    @scale_x = @scale_y = 1
+    @offset_x = @offset_y = 0
   end
 
   def move_to(i, j)
     @x = i * TILE_SIZE + 4
     @y = j * TILE_SIZE + 8
+  end
+
+  def animate
+    case @animation_state
+    when :idle
+      deformation = 0.05 * (Math.sin(@animation_frame.to_f / FRAME_COUNT[:idle] * Math::PI))
+      @scale_x = 1 + 2 * deformation
+      @offset_x = -deformation * @w
+      @scale_y = 1 - deformation
+      @offset_y = deformation * @h
+    end
+
+    @animation_frame += 1
+    @animation_frame = 0 if @animation_frame >= FRAME_COUNT[@animation_state]
   end
 
   def update(stage)
@@ -41,9 +64,17 @@ class Character < GameObject
     end
 
     move_pushing(forces, stage)
+
+    animate
   end
 
   def draw
-    super(nil, 1, 1, 255, 0xffffff, nil, nil, 0, true)
+    phys_x = @x
+    phys_y = @y
+    @x += @offset_x
+    @y += @offset_y
+    super(nil, @scale_x, @scale_y, 255, 0xffffff, nil, nil, 0, true)
+    @x = phys_x
+    @y = phys_y
   end
 end
