@@ -13,11 +13,12 @@ class Character < GameObject
   FRAME_COUNT = {
     idle: 60,
     walking: 40,
+    jumping: 40,
   }.freeze
 
   def initialize
     super(0, 0, TILE_SIZE - 4, TILE_SIZE - 8, :circle, Vector.new(-2, -8))
-    @max_speed.x = 8
+    @max_speed.x = 5
     @jump_timer = 0
 
     @scale_x = @scale_y = 1
@@ -35,11 +36,11 @@ class Character < GameObject
       alpha_change: :shrink,
     }
     @particles_left = Particles.new(**particle_options.merge(
-      source_offset_x: @w / 2 + 8,
+      source_offset_x: @w / 2 + 15,
       speed: { x: -3, y: -1..1 }
     ))
     @particles_right = Particles.new(**particle_options.merge(
-      source_offset_x: @w / 2 - 8,
+      source_offset_x: @w / 2 - 15,
       speed: { x: 3, y: -1..1 }
     ))
   end
@@ -54,16 +55,25 @@ class Character < GameObject
     @animation_state = state
   end
 
+  def reset_animation(state)
+    @animation_frame = 0
+    @animation_state = state
+  end
+
   def animate
-    case @animation_state
-    when :idle, :walking
-      factor = @animation_state == :idle ? 0.05 : 0.1
-      deformation = factor * (Math.sin(@animation_frame.to_f / FRAME_COUNT[@animation_state] * Math::PI))
-      @scale_x = 1 + 2 * deformation
-      @offset_x = -deformation * @w
-      @scale_y = 1 - deformation
-      @offset_y = deformation * @h
-    end
+    factor = case @animation_state
+             when :idle
+               0.05
+             when :walking
+               0.1
+             when :jumping
+               -0.1
+             end
+    deformation = factor * (Math.sin(@animation_frame.to_f / FRAME_COUNT[@animation_state] * Math::PI))
+    @scale_x = 1 + 2 * deformation
+    @offset_x = -deformation * @w
+    @scale_y = 1 - deformation
+    @offset_y = deformation * @h
 
     @animation_frame += 1
     @animation_frame = 0 if @animation_frame >= FRAME_COUNT[@animation_state]
@@ -90,9 +100,14 @@ class Character < GameObject
     if @bottom && @jump_timer > 0
       @jump_timer = 0
       forces.y -= JUMP_FORCE
+      reset_animation(:jumping)
     end
 
+    prev_bottom = @bottom
     move_pushing(forces, stage)
+    if @bottom && !prev_bottom
+      reset_animation(:idle)
+    end
 
     if @speed.x.abs >= 0.1 && @animation_state == :idle
       transition_animation(:walking)

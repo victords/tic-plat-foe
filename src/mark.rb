@@ -49,7 +49,7 @@ class Mark < GameObject
   end
 
   def update(stage)
-    move_pushing(Vector.new, stage)
+    move(Vector.new, stage.obstacles, [])
     @tile = calculate_tile
   end
 

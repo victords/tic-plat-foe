@@ -15,6 +15,8 @@ class TicPlatFoe < GameWindow
     Mouse.update
     KB.update
     Game.update
+
+    close if KB.key_pressed?(Gosu::KB_ESCAPE)
   end
 
   def draw
