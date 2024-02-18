@@ -39,7 +39,12 @@ class Mark < GameObject
   end
 
   def draw
-    super(nil, 1, 1, @tile ? 255 : 127, @color)
+    alpha = if circle_or_x?
+              @tile ? 255 : 127
+            else
+              255
+            end
+    super(nil, 1, 1, alpha, @color)
   end
 
   private

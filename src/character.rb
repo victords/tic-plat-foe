@@ -37,11 +37,11 @@ class Character < GameObject
     }
     @particles_left = Particles.new(**particle_options.merge(
       source_offset_x: @w / 2 + 15,
-      speed: { x: -3, y: -1..1 }
+      speed: { x: 3, y: -1..1 }
     ))
     @particles_right = Particles.new(**particle_options.merge(
       source_offset_x: @w / 2 - 15,
-      speed: { x: 3, y: -1..1 }
+      speed: { x: -3, y: -1..1 }
     ))
   end
 

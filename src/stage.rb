@@ -16,6 +16,7 @@ class Stage
       Block.new(-1, 0, 1, SCREEN_HEIGHT),
       Block.new(SCREEN_WIDTH, 0, 1, SCREEN_HEIGHT),
     ]
+    @passable_blocks = []
     @marks = []
     @character = Character.new
 
@@ -29,6 +30,8 @@ class Stage
             @start_point = Vector.new(i, j)
           when '#'
             @blocks << Block.new(i * TILE_SIZE, j * TILE_SIZE, TILE_SIZE, TILE_SIZE)
+          when '-'
+            @passable_blocks << Block.new(i * TILE_SIZE, j * TILE_SIZE, TILE_SIZE, TILE_SIZE, true)
           when 'o'
             @marks << Mark.new(:circle, i, j)
           when 'x'
@@ -49,7 +52,7 @@ class Stage
   end
 
   def obstacles
-    @blocks + @marks + [@character]
+    @blocks + @passable_blocks + @marks + [@character]
   end
 
   def check_combo(marks_by_tile)
@@ -133,6 +136,9 @@ class Stage
       dn = j < @map.size.y - 1 && ((block && !block_dn) || (!block && block_dn))
       G.window.draw_rect(x + TILE_SIZE - 1, y, 2, TILE_SIZE, WALL_COLOR, 0) if rt
       G.window.draw_rect(x, y + TILE_SIZE - 1, TILE_SIZE, 2, WALL_COLOR, 0) if dn
+    end
+    @passable_blocks.each do |b|
+      G.window.draw_rect(b.x + 4, b.y - 1, TILE_SIZE - 8, 2, WALL_COLOR, 0)
     end
     @marks.each(&:draw)
     @character.draw
