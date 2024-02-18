@@ -34,6 +34,7 @@ class EditorStage < Stage
   def place(obj_type, i, j)
     case obj_type
     when "s"
+      @elements[@start_point.x][@start_point.y] = "_" if @start_point
       @start_point = Vector.new(i, j)
     when "o"
       @marks << Mark.new(:circle, i, j)
@@ -64,6 +65,15 @@ class EditorStage < Stage
     @elements[i][j] = new_obj_type
   end
 
+  def save(number)
+    File.open("#{Res.prefix}stage/#{number}", "w+") do |f|
+      f.write("#{@title}\n")
+      (0...@map.size.y).each do |j|
+        f.write("#{@elements.map { |line| line[j] }.join}\n")
+      end
+    end
+  end
+
   def draw
     (1...@map.size.x).each do |i|
       G.window.draw_rect(i * TILE_SIZE - 1, 0, 2, SCREEN_HEIGHT, GRID_COLOR, 0)
@@ -86,7 +96,7 @@ class EditorStage < Stage
     @marks.each(&:draw)
 
     return unless @start_point
-    Game.font.draw_text("S", @start_point.x * TILE_SIZE, @start_point.y * TILE_SIZE, 0, 1, 1, 0xffffffff)
+    Game.font.draw_text_rel("S", (@start_point.x + 0.5) * TILE_SIZE, (@start_point.y + 0.5) * TILE_SIZE, 0, 0.5, 0.5, 1, 1, 0xffffffff)
   end
 
   private
@@ -105,17 +115,32 @@ end
 
 class Editor < GameWindow
   def initialize
-    super(900, 600, false)
+    super(920, 600, false)
     Res.prefix = "#{File.expand_path(__FILE__).split("/")[0..-3].join("/")}/data"
     Game.init
 
+    @stage_number = 1
     @stage = EditorStage.new
+    button_props = {
+      x: SCREEN_WIDTH,
+      width: 40,
+      height: 40,
+      font: Game.font,
+      text_color: 0xffffff,
+      over_text_color: 0xdddddd,
+      down_text_color: 0xbbbbbb,
+    }
     @buttons = [
-      Button.new(x: 810, y: 10, width: 40, height: 40, font: Game.font, text: "S", text_color: 0xffffff) { @action = "s" },
-      Button.new(x: 810, y: 60, width: 40, height: 40, font: Game.font, text: "#", text_color: 0xffffff) { @action = "#" },
-      Button.new(x: 810, y: 110, width: 40, height: 40, font: Game.font, text: "-", text_color: 0xffffff) { @action = "-" },
-      Button.new(x: 810, y: 160, width: 40, height: 40, font: Game.font, text: "O", text_color: 0xffffff) { @action = "o" },
-      Button.new(x: 810, y: 210, width: 40, height: 40, font: Game.font, text: "X", text_color: 0xffffff) { @action = "x" },
+      Button.new(button_props.merge(y: 10, text: "S")) { @action = "s" },
+      Button.new(button_props.merge(y: 60, text: "#")) { @action = "#" },
+      Button.new(button_props.merge(y: 110, text: "-")) { @action = "-" },
+      Button.new(button_props.merge(y: 160, text: "O")) { @action = "o" },
+      Button.new(button_props.merge(y: 210, text: "X")) { @action = "x" },
+      Button.new(button_props.merge(y: 260, text: "□")) { @action = "[" },
+      Button.new(button_props.merge(y: 360, text: "<")) { @stage_number = (@stage_number - 2) % 10 + 1 },
+      Button.new(button_props.merge(x: SCREEN_WIDTH + 80, y: 360, text: ">")) { @stage_number = @stage_number % 10 + 1 },
+      Button.new(button_props.merge(x: SCREEN_WIDTH + 40, y: 410, text: 'load')) { @stage = EditorStage.new(@stage_number) },
+      Button.new(button_props.merge(x: SCREEN_WIDTH + 40, y: 460, text: 'save')) { @stage.save(@stage_number) },
     ]
   end
 
@@ -135,7 +160,9 @@ class Editor < GameWindow
 
   def draw
     @stage.draw
+    G.window.draw_rect(SCREEN_WIDTH, 0, 120, SCREEN_HEIGHT, 0x80ffffff)
     @buttons.each(&:draw)
+    Game.font.draw_text_rel(@stage_number.to_s, SCREEN_WIDTH + 60, 380, 0, 0.5, 0.5, 1, 1, 0xffffffff)
   end
 end
 
