@@ -45,6 +45,8 @@ class Stage
         i = 0
       end
     end
+
+    @effects = []
   end
 
   def start
@@ -53,6 +55,10 @@ class Stage
 
   def obstacles
     @blocks + @passable_blocks + @marks + [@character]
+  end
+
+  def add_effect(effect)
+    @effects << effect
   end
 
   def check_combo(marks_by_tile)
@@ -119,6 +125,11 @@ class Stage
     elsif result == :x
       puts "defeat"
     end
+
+    @effects.reverse_each do |e|
+      e.update
+      @effects.delete(e) if e.dead
+    end
   end
 
   def draw
@@ -142,5 +153,6 @@ class Stage
     end
     @marks.each(&:draw)
     @character.draw
+    @effects.each(&:draw)
   end
 end

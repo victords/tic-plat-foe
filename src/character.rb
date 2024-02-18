@@ -16,6 +16,39 @@ class Character < GameObject
     jumping: 40,
   }.freeze
 
+  class JumpEffect
+    attr_reader :dead
+
+    def initialize(x, y)
+      particle_options = {
+        x:,
+        y:,
+        shape: :square,
+        scale: 5,
+        emission_interval: 60,
+        duration: 15,
+        alpha_change: :shrink
+      }
+      @particles = [
+        Particles.new(**particle_options.merge(speed: Vector.new(-2, -2))).start,
+        Particles.new(**particle_options.merge(speed: Vector.new(-1, -2))).start,
+        Particles.new(**particle_options.merge(speed: Vector.new(1, -2))).start,
+        Particles.new(**particle_options.merge(speed: Vector.new(2, -2))).start,
+      ]
+      @lifetime = 15
+    end
+
+    def update
+      @particles.each(&:update)
+      @lifetime -= 1
+      @dead = true if @lifetime < 0
+    end
+
+    def draw
+      @particles.each(&:draw)
+    end
+  end
+
   def initialize
     super(0, 0, TILE_SIZE - 4, TILE_SIZE - 8, :circle, Vector.new(-2, -8))
     @max_speed.x = 4
@@ -83,10 +116,10 @@ class Character < GameObject
     forces = Vector.new
     if KB.key_down?(Gosu::KB_LEFT)
       forces.x -= MOVE_FORCE
-      @particles_left.start unless @particles_left.emitting?
+      @particles_left.start if @bottom && !@particles_left.emitting?
     elsif KB.key_down?(Gosu::KB_RIGHT)
       forces.x += MOVE_FORCE
-      @particles_right.start unless @particles_right.emitting?
+      @particles_right.start if @bottom && !@particles_right.emitting?
     else
       forces.x -= FRICTION_FACTOR * @speed.x
       @particles_left.stop
@@ -101,6 +134,9 @@ class Character < GameObject
       @jump_timer = 0
       forces.y -= JUMP_FORCE
       reset_animation(:jumping)
+      stage.add_effect(JumpEffect.new(@x + @w / 2, @y + @h))
+      @particles_left.stop
+      @particles_right.stop
     end
 
     prev_bottom = @bottom

@@ -1,3 +1,5 @@
+gem 'minigl', '=2.5.2'
+
 require 'minigl'
 
 Vector = MiniGL::Vector
