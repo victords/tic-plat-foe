@@ -13,6 +13,8 @@ class Mark < GameObject
 
   def initialize(type, i, j)
     super(i * TILE_SIZE + 1, j * TILE_SIZE, TILE_SIZE - 2, TILE_SIZE, type, Vector.new(-1, 0))
+    @start_x = @x
+    @start_y = @y
     @type = type
     @color = case type
              when :circle then 0x3333cc
@@ -31,6 +33,13 @@ class Mark < GameObject
 
   def circle_or_x?
     type == :circle || type == :x
+  end
+
+  def reset
+    @speed = Vector.new
+    @x = @start_x
+    @y = @start_y
+    @tile = nil
   end
 
   def update(stage)

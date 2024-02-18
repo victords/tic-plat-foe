@@ -9,6 +9,7 @@ class Stage
   WALL_COLOR = 0xffffffff
 
   attr_reader :marks
+  attr_writer :on_finish
 
   def initialize(id)
     @map = Map.new(TILE_SIZE, TILE_SIZE, SCREEN_WIDTH / TILE_SIZE, SCREEN_HEIGHT / TILE_SIZE, SCREEN_WIDTH, SCREEN_HEIGHT)
@@ -28,6 +29,7 @@ class Stage
           case char
           when 's'
             @start_point = Vector.new(i, j)
+            @character.move_to(@start_point.x, @start_point.y)
           when '#'
             @blocks << Block.new(i * TILE_SIZE, j * TILE_SIZE, TILE_SIZE, TILE_SIZE)
           when '-'
@@ -49,8 +51,9 @@ class Stage
     @effects = []
   end
 
-  def start
+  def reset
     @character.move_to(@start_point.x, @start_point.y)
+    @marks.each(&:reset)
   end
 
   def obstacles
@@ -79,7 +82,7 @@ class Stage
       (j0..j1).each do |j|
         if marks_by_tile[mark.tile.x][j]&.type == marks_by_tile[mark.tile.x][j + 1]&.type &&
            marks_by_tile[mark.tile.x][j]&.type == marks_by_tile[mark.tile.x][j + 2]&.type
-          return :tb
+          return mark.type
         end
       end
 
@@ -92,7 +95,7 @@ class Stage
       (i0..i1).each_with_index do |i, index|
         if marks_by_tile[i][j0 + index]&.type == marks_by_tile[i + 1][j0 + index + 1]&.type &&
            marks_by_tile[i][j0 + index]&.type == marks_by_tile[i + 2][j0 + index + 2]&.type
-          return :d1
+          return mark.type
         end
       end
 
@@ -105,7 +108,7 @@ class Stage
       (i0..i1).each_with_index do |i, index|
         if marks_by_tile[i][j0 - index]&.type == marks_by_tile[i + 1][j0 - index - 1]&.type &&
            marks_by_tile[i][j0 - index]&.type == marks_by_tile[i + 2][j0 - index - 2]&.type
-          return :d2
+          return mark.type
         end
       end
     end
@@ -113,23 +116,23 @@ class Stage
   end
 
   def update
+    reset if KB.key_pressed?(Gosu::KB_R)
+
     @character.update(self)
+
     marks_by_tile = Array.new(@map.size.x) { Array.new(@map.size.y) }
     @marks.each do |m|
       m.update(self)
       marks_by_tile[m.tile.x][m.tile.y] = m if m.tile && m.circle_or_x?
-    end
-    result = check_combo(marks_by_tile)
-    if result == :circle
-      puts "victory"
-    elsif result == :x
-      puts "defeat"
     end
 
     @effects.reverse_each do |e|
       e.update
       @effects.delete(e) if e.dead
     end
+
+    result = check_combo(marks_by_tile)
+    @on_finish.call(result) if result
   end
 
   def draw
