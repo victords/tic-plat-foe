@@ -16,7 +16,8 @@ class Mark < GameObject
     @type = type
     @color = case type
              when :circle then 0x3333cc
-             else              0xcc3333
+             when :x      then 0xcc3333
+             else              0xffffff
              end
   end
 
@@ -27,6 +28,21 @@ class Mark < GameObject
     @speed = prev_speed
     resulting_speed_x
   end
+
+  def circle_or_x?
+    type == :circle || type == :x
+  end
+
+  def update(stage)
+    move(Vector.new, stage.obstacles, [])
+    @tile = calculate_tile
+  end
+
+  def draw
+    super(nil, 1, 1, @tile ? 255 : 127, @color)
+  end
+
+  private
 
   def calculate_tile
     row = @y.to_i / TILE_SIZE
@@ -46,14 +62,5 @@ class Mark < GameObject
     end
 
     Vector.new(column, row)
-  end
-
-  def update(stage)
-    move(Vector.new, stage.obstacles, [])
-    @tile = calculate_tile
-  end
-
-  def draw
-    super(nil, 1, 1, @tile ? 255 : 127, @color)
   end
 end

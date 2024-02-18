@@ -18,7 +18,7 @@ class Character < GameObject
 
   def initialize
     super(0, 0, TILE_SIZE - 4, TILE_SIZE - 8, :circle, Vector.new(-2, -8))
-    @max_speed.x = 5
+    @max_speed.x = 4
     @jump_timer = 0
 
     @scale_x = @scale_y = 1

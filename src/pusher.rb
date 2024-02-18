@@ -1,6 +1,8 @@
 module Pusher
   def move_pushing(forces, stage, set_speed: false)
     delta_x = set_speed ? forces.x : @speed.x + forces.x / @mass
+    delta_x = [[delta_x, -@max_speed.x].max, @max_speed.x].min
+
     move(forces, stage.obstacles.reject { |o| o == self }, [], set_speed)
     if delta_x > 0
       right_obstacles = find_obstacles(stage.obstacles, false)

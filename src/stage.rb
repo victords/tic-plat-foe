@@ -33,6 +33,8 @@ class Stage
             @marks << Mark.new(:circle, i, j)
           when 'x'
             @marks << Mark.new(:x, i, j)
+          when '['
+            @marks << Mark.new(:square, i, j)
           end
           i += 1
         end
@@ -50,7 +52,7 @@ class Stage
     @blocks + @marks + [@character]
   end
 
-  def check_victory(marks_by_tile)
+  def check_combo(marks_by_tile)
     marks_by_tile.flatten.compact.each do |mark|
       # left to right
       i0 = [mark.tile.x - 2, 0].max
@@ -58,7 +60,7 @@ class Stage
       (i0..i1).each do |i|
         if marks_by_tile[i][mark.tile.y]&.type == marks_by_tile[i + 1][mark.tile.y]&.type &&
            marks_by_tile[i][mark.tile.y]&.type == marks_by_tile[i + 2][mark.tile.y]&.type
-          return :lr
+          return mark.type
         end
       end
 
@@ -106,10 +108,14 @@ class Stage
     marks_by_tile = Array.new(@map.size.x) { Array.new(@map.size.y) }
     @marks.each do |m|
       m.update(self)
-      marks_by_tile[m.tile.x][m.tile.y] = m if m.tile
+      marks_by_tile[m.tile.x][m.tile.y] = m if m.tile && m.circle_or_x?
     end
-    result = check_victory(marks_by_tile)
-    puts result if result
+    result = check_combo(marks_by_tile)
+    if result == :circle
+      puts "victory"
+    elsif result == :x
+      puts "defeat"
+    end
   end
 
   def draw
