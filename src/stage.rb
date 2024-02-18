@@ -12,6 +12,7 @@ class Stage
   attr_writer :on_finish
 
   def initialize(id)
+    @id = id
     @map = Map.new(TILE_SIZE, TILE_SIZE, SCREEN_WIDTH / TILE_SIZE, SCREEN_HEIGHT / TILE_SIZE, SCREEN_WIDTH, SCREEN_HEIGHT)
     @blocks = [
       Block.new(-1, 0, 1, SCREEN_HEIGHT),
@@ -22,9 +23,13 @@ class Stage
     @character = Character.new
 
     File.open("#{Res.prefix}stage/#{id}") do |f|
+      contents = f.read
+      first_line_break = contents.index("\n")
+      @title = contents[0...first_line_break]
+
       i = 0
       j = 0
-      f.read.each_line do |line|
+      contents[(first_line_break + 1)..].each_line do |line|
         line.each_char do |char|
           case char
           when 's'
@@ -157,5 +162,8 @@ class Stage
     @marks.each(&:draw)
     @character.draw
     @effects.each(&:draw)
+
+    Game.font.draw_text("Level #{@id}", 10, 5, 0, 0.75, 0.75, 0x99ffffff)
+    Game.font.draw_text(@title, 10, 28, 0, 1, 1, 0xffffffff)
   end
 end

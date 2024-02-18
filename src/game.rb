@@ -1,8 +1,13 @@
 require_relative 'stage'
 
+include MiniGL
+
 class Game
   class << self
+    attr_reader :font
+
     def init
+      @font = Gosu::Font.new(24, name: "#{Res.prefix}font/DejaVuSans.ttf")
       @stage_index = 0
       next_stage
     end

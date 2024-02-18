@@ -161,7 +161,7 @@ class Character < GameObject
     phys_y = @y
     @x += @offset_x
     @y += @offset_y
-    super(nil, @scale_x, @scale_y, 255, 0xffffff, nil, nil, 0, true)
+    super(nil, @scale_x, @scale_y)
     @x = phys_x
     @y = phys_y
     @particles_left.draw
