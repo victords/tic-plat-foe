@@ -65,6 +65,17 @@ class EditorStage < Stage
     @elements[i][j] = new_obj_type
   end
 
+  def fill(i, j, origin = :none)
+    return if i < 0 || i >= @map.size.x || j < 0 || j >= @map.size.y
+    return unless @elements[i][j] == "_" || @elements[i][j] == "#" && origin == :none
+
+    place("#", i, j)
+    fill(i, j - 1, :down) unless origin == :up
+    fill(i + 1, j, :left) unless origin == :right
+    fill(i, j + 1, :up) unless origin == :down
+    fill(i - 1, j, :right) unless origin == :left
+  end
+
   def save(number)
     File.open("#{Res.prefix}stage/#{number}", "w+") do |f|
       f.write("#{@title}\n")
@@ -151,7 +162,9 @@ class Editor < GameWindow
 
     col = Mouse.x / TILE_SIZE
     row = Mouse.y / TILE_SIZE
-    if Mouse.button_down?(:left)
+    if Mouse.double_click?(:left) && @action == "#"
+      @stage.fill(col, row)
+    elsif Mouse.button_down?(:left)
       @stage.place(@action, col, row) if @action
     elsif Mouse.button_down?(:right)
       @stage.erase(col, row)
