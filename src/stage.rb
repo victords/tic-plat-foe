@@ -7,6 +7,35 @@ class Stage
   GRID_COLOR = 0x33ffffff
   WALL_COLOR = 0xffffffff
 
+  class HighlightTileEffect
+    INTERVAL = 300
+    DURATION = 90
+    COLOR = 0x00ffff
+
+    def initialize(i, j, index)
+      @x = i * TILE_SIZE + 1
+      @y = j * TILE_SIZE + 1
+      @timer = INTERVAL - index * 15
+      @alpha = 0
+    end
+
+    def dead = false
+
+    def update
+      @timer += 1
+      if @timer > INTERVAL
+        frame = @timer - INTERVAL
+        @alpha = (85 * (1 - ((frame - DURATION).to_f / DURATION).abs)).round
+        @timer = 0 if frame >= 2 * DURATION
+      end
+    end
+
+    def draw
+      color = (@alpha << 24) | COLOR
+      G.window.draw_rect(@x, @y, TILE_SIZE - 2, TILE_SIZE - 2, color, -1)
+    end
+  end
+
   attr_reader :marks
   attr_writer :on_finish
 
@@ -19,6 +48,7 @@ class Stage
     ]
     @passable_blocks = []
     @marks = []
+    @effects = []
     @character = Character.new
 
     File.open("#{Res.prefix}stage/#{id}") do |f|
@@ -28,6 +58,7 @@ class Stage
 
       i = 0
       j = 0
+      effect_index = 0
       contents[(first_line_break + 1)..].each_line do |line|
         line.each_char do |char|
           case char
@@ -38,12 +69,16 @@ class Stage
             @blocks << Block.new(i * TILE_SIZE, j * TILE_SIZE, TILE_SIZE, TILE_SIZE)
           when '-'
             @passable_blocks << Block.new(i * TILE_SIZE, j * TILE_SIZE, TILE_SIZE, TILE_SIZE, true)
-          when 'o'
+          when 'o', 'O'
             @marks << Mark.new(:circle, i, j)
-          when 'x'
+            effect_index = add_highlight_effect(i, j, effect_index) if char == 'O'
+          when 'x', 'X'
             @marks << Mark.new(:x, i, j)
+            effect_index = add_highlight_effect(i, j, effect_index) if char == 'X'
           when '['
             @marks << Mark.new(:square, i, j)
+          when '*'
+            effect_index = add_highlight_effect(i, j, effect_index)
           end
           i += 1
         end
@@ -51,8 +86,6 @@ class Stage
         i = 0
       end
     end
-
-    @effects = []
   end
 
   def reset
@@ -62,6 +95,11 @@ class Stage
 
   def obstacles
     @blocks + @passable_blocks + @marks + [@character]
+  end
+
+  def add_highlight_effect(i, j, index)
+    @effects << HighlightTileEffect.new(i, j, index)
+    index + 1
   end
 
   def add_effect(effect)
