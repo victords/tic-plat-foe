@@ -3,7 +3,7 @@ module Pusher
     delta_x = set_speed ? forces.x : @speed.x + forces.x / @mass
     delta_x = [[delta_x, -@max_speed.x].max, @max_speed.x].min
 
-    move(forces, stage.obstacles.reject { |o| o == self }, [], set_speed)
+    move(forces, stage.obstacles, [], set_speed)
     if delta_x > 0
       right_obstacles = find_obstacles(stage.obstacles, false)
       return if right_obstacles.any? { |o| o.is_a?(Block) }

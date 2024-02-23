@@ -26,9 +26,7 @@ class Mark < GameObject
   def push(delta_x, stage)
     prev_speed = @speed.clone
     move_pushing(Vector.new(delta_x, 0), stage, set_speed: true)
-    resulting_speed_x = @speed.x
     @speed = prev_speed
-    resulting_speed_x
   end
 
   def circle_or_x?

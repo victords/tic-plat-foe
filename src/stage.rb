@@ -1,4 +1,3 @@
-require 'minigl'
 require_relative 'character'
 require_relative 'mark'
 
