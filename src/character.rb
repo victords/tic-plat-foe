@@ -1,5 +1,6 @@
 require_relative 'constants'
 require_relative 'pusher'
+require_relative 'effect/jump_effect'
 
 include MiniGL
 
@@ -15,39 +16,6 @@ class Character < GameObject
     walking: 40,
     jumping: 40,
   }.freeze
-
-  class JumpEffect
-    attr_reader :dead
-
-    def initialize(x, y)
-      particle_options = {
-        x:,
-        y:,
-        shape: :square,
-        scale: 5,
-        emission_interval: 60,
-        duration: 15,
-        alpha_change: :shrink
-      }
-      @particles = [
-        Particles.new(**particle_options.merge(speed: Vector.new(-2, -2))).start,
-        Particles.new(**particle_options.merge(speed: Vector.new(-1, -2))).start,
-        Particles.new(**particle_options.merge(speed: Vector.new(1, -2))).start,
-        Particles.new(**particle_options.merge(speed: Vector.new(2, -2))).start,
-      ]
-      @lifetime = 15
-    end
-
-    def update
-      @particles.each(&:update)
-      @lifetime -= 1
-      @dead = true if @lifetime < 0
-    end
-
-    def draw
-      @particles.each(&:draw)
-    end
-  end
 
   def initialize
     super(0, 0, TILE_SIZE - 4, TILE_SIZE - 8, :circle, Vector.new(-2, -8))
@@ -81,6 +49,7 @@ class Character < GameObject
   def move_to(i, j)
     @x = i * TILE_SIZE + 2
     @y = j * TILE_SIZE + 8
+    @speed = Vector.new
   end
 
   def transition_animation(state)

@@ -1,40 +1,13 @@
 require_relative 'character'
 require_relative 'mark'
+require_relative 'effect/tile_highlight_effect'
+require_relative 'effect/stage_end_effect'
 
 include MiniGL
 
 class Stage
   GRID_COLOR = 0x33ffffff
   WALL_COLOR = 0xffffffff
-
-  class HighlightTileEffect
-    INTERVAL = 300
-    DURATION = 90
-    COLOR = 0x00ffff
-
-    def initialize(i, j, index)
-      @x = i * TILE_SIZE + 1
-      @y = j * TILE_SIZE + 1
-      @timer = INTERVAL - index * 15
-      @alpha = 0
-    end
-
-    def dead = false
-
-    def update
-      @timer += 1
-      if @timer > INTERVAL
-        frame = @timer - INTERVAL
-        @alpha = (85 * (1 - ((frame - DURATION).to_f / DURATION).abs)).round
-        @timer = 0 if frame >= 2 * DURATION
-      end
-    end
-
-    def draw
-      color = (@alpha << 24) | COLOR
-      G.window.draw_rect(@x, @y, TILE_SIZE - 2, TILE_SIZE - 2, color, -1)
-    end
-  end
 
   attr_reader :marks
   attr_writer :on_finish
@@ -91,6 +64,8 @@ class Stage
   def reset
     @character.move_to(@start_point.x, @start_point.y)
     @marks.each(&:reset)
+    @effects.clear
+    @finished = nil
   end
 
   def obstacles
@@ -98,7 +73,7 @@ class Stage
   end
 
   def add_highlight_effect(i, j, index)
-    @effects << HighlightTileEffect.new(i, j, index)
+    @effects << TileHighlightEffect.new(i, j, index)
     index + 1
   end
 
@@ -158,23 +133,34 @@ class Stage
   end
 
   def update
-    reset if KB.key_pressed?(Gosu::KB_R)
+    unless @finished
+      reset if KB.key_pressed?(Gosu::KB_R)
 
-    @character.update(self)
+      @character.update(self)
 
-    marks_by_tile = Array.new(@map.size.x) { Array.new(@map.size.y) }
-    @marks.each do |m|
-      m.update(self)
-      marks_by_tile[m.tile.x][m.tile.y] = m if m.tile && m.circle_or_x?
+      marks_by_tile = Array.new(@map.size.x) { Array.new(@map.size.y) }
+      @marks.each do |m|
+        m.update(self)
+        marks_by_tile[m.tile.x][m.tile.y] = m if m.tile && m.circle_or_x?
+      end
     end
 
+    finished = @finished
     @effects.reverse_each do |e|
       e.update
-      @effects.delete(e) if e.dead
+      if e.dead
+        @effects.delete(e)
+        @on_finish.call(finished) if e.is_a?(StageEndEffect)
+      end
     end
+    return if finished
 
-    result = check_combo(marks_by_tile)
-    @on_finish.call(result) if result
+    mark_type = check_combo(marks_by_tile)
+    if mark_type
+      result = mark_type == :circle ? :victory : :defeat
+      add_effect(StageEndEffect.new(result))
+      @finished = result
+    end
   end
 
   def draw

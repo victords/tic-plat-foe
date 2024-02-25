@@ -8,7 +8,7 @@ class Game
 
     def init
       @font = Gosu::Font.new(24, name: "#{Res.prefix}font/DejaVuSans.ttf")
-      @stage_index = 0
+      @stage_index = 4
       next_stage
     end
 
@@ -19,7 +19,7 @@ class Game
     end
 
     def on_stage_finish(result)
-      if result == :circle
+      if result == :victory
         next_stage
       else
         @stage.reset
