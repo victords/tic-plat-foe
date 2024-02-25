@@ -3,13 +3,12 @@ require_relative '../game'
 class StageEndEffect
   TEXT_SCALE = 2
   CHAR_SPACING = 2
-  CHAR_DELAY = 5
-  FADE_IN_DURATION = 20
   WAVE_DURATION = 28
 
   attr_reader :dead
 
   def initialize(result)
+    @result = result
     @text = "#{result.to_s.upcase}!"
     @char_widths = @text.chars.map do |char|
       Game.font.text_width(char) * TEXT_SCALE
@@ -17,11 +16,13 @@ class StageEndEffect
     @x = (SCREEN_WIDTH - @char_widths.sum - (@text.size - 1) * CHAR_SPACING) / 2
     @y = (SCREEN_HEIGHT - Game.font.height * TEXT_SCALE) / 2
     @text_helper = MiniGL::TextHelper.new(Game.font, 0, TEXT_SCALE, TEXT_SCALE)
-    @color = case result
-             when :victory then 0x00ffff
-             when :defeat  then 0x990000
-             else               0xcccccc
-             end
+    @color, @char_delay, @fade_in_duration =
+      case result
+      when :victory
+        [0x00ffff, 5, 30]
+      else
+        [0x990000, 15, 1]
+      end
     @phase = :fade_in
     @dead = false
     @timer = 0
@@ -31,12 +32,16 @@ class StageEndEffect
     @timer += 1
     case @phase
     when :fade_in
-      if @timer >= (@text.size - 1) * CHAR_DELAY + FADE_IN_DURATION + 30
-        @phase = :wave
-        @timer = 0
+      if @timer >= (@text.size - 1) * @char_delay + @fade_in_duration + 15
+        if @result == :victory
+          @phase = :wave
+          @timer = 0
+        else
+          @dead = true
+        end
       end
     else
-      @dead = true if @timer >= (@text.size - 1) * CHAR_DELAY + WAVE_DURATION + 60
+      @dead = true if @timer >= (@text.size - 1) * @char_delay + WAVE_DURATION + 60
     end
   end
 
@@ -44,10 +49,10 @@ class StageEndEffect
     x = @x
     is_fade_in = @phase == :fade_in
     @text.each_char.with_index do |c, i|
-      frame = @timer - i * CHAR_DELAY
+      frame = @timer - i * @char_delay
       next if is_fade_in && frame <= 0
       alpha = if is_fade_in
-                [(255 * frame.to_f / FADE_IN_DURATION).round, 255].min
+                [(255 * frame.to_f / @fade_in_duration).round, 255].min
               else
                 255
               end
