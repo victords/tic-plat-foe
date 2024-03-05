@@ -1,4 +1,4 @@
-require_relative 'stage'
+require_relative 'level'
 
 include MiniGL
 
@@ -8,30 +8,30 @@ class Game
 
     def init
       @font = Gosu::Font.new(24, name: "#{Res.prefix}font/DejaVuSans.ttf")
-      @stage_index = 0
-      next_stage
+      @level_index = 6
+      next_level
     end
 
-    def next_stage
-      @stage_index += 1
-      @stage = Stage.new(@stage_index)
-      @stage.on_finish = method(:on_stage_finish)
+    def next_level
+      @level_index += 1
+      @level = Level.new(@level_index)
+      @level.on_finish = method(:on_level_finish)
     end
 
-    def on_stage_finish(result)
+    def on_level_finish(result)
       if result == :victory
-        next_stage
+        next_level
       else
-        @stage.reset
+        @level.reset
       end
     end
 
     def update
-      @stage.update
+      @level.update
     end
 
     def draw
-      @stage.draw
+      @level.draw
     end
   end
 end

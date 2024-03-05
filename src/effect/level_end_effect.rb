@@ -1,6 +1,6 @@
 require_relative '../game'
 
-class StageEndEffect
+class LevelEndEffect
   TEXT_SCALE = 2
   CHAR_SPACING = 2
   WAVE_DURATION = 28

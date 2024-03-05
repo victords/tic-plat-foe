@@ -3,7 +3,7 @@ require_relative "game"
 
 include MiniGL
 
-class EditorStage < Stage
+class EditorLevel < Level
   def initialize(id = nil)
     @elements = Array.new(SCREEN_WIDTH / TILE_SIZE) { Array.new(SCREEN_HEIGHT / TILE_SIZE) { "_" } }
 
@@ -77,7 +77,7 @@ class EditorStage < Stage
   end
 
   def save(number)
-    File.open("#{Res.prefix}stage/#{number}", "w+") do |f|
+    File.open("#{Res.prefix}level/#{number}", "w+") do |f|
       f.write("#{@title}\n")
       (0...@map.size.y).each do |j|
         f.write("#{@elements.map { |line| line[j] }.join}\n")
@@ -130,8 +130,8 @@ class Editor < GameWindow
     Res.prefix = "#{File.expand_path(__FILE__).split("/")[0..-3].join("/")}/data"
     Game.init
 
-    @stage_number = 1
-    @stage = EditorStage.new
+    @level_number = 1
+    @level = EditorLevel.new
     button_props = {
       x: SCREEN_WIDTH,
       width: 40,
@@ -148,10 +148,10 @@ class Editor < GameWindow
       Button.new(button_props.merge(y: 160, text: "O")) { @action = "o" },
       Button.new(button_props.merge(y: 210, text: "X")) { @action = "x" },
       Button.new(button_props.merge(y: 260, text: "□")) { @action = "[" },
-      Button.new(button_props.merge(y: 360, text: "<")) { @stage_number = (@stage_number - 2) % 10 + 1 },
-      Button.new(button_props.merge(x: SCREEN_WIDTH + 80, y: 360, text: ">")) { @stage_number = @stage_number % 10 + 1 },
-      Button.new(button_props.merge(x: SCREEN_WIDTH + 40, y: 410, text: 'load')) { @stage = EditorStage.new(@stage_number) },
-      Button.new(button_props.merge(x: SCREEN_WIDTH + 40, y: 460, text: 'save')) { @stage.save(@stage_number) },
+      Button.new(button_props.merge(y: 360, text: "<")) { @level_number = (@level_number - 2) % 10 + 1 },
+      Button.new(button_props.merge(x: SCREEN_WIDTH + 80, y: 360, text: ">")) { @level_number = @level_number % 10 + 1 },
+      Button.new(button_props.merge(x: SCREEN_WIDTH + 40, y: 410, text: 'load')) { @level = EditorLevel.new(@level_number) },
+      Button.new(button_props.merge(x: SCREEN_WIDTH + 40, y: 460, text: 'save')) { @level.save(@level_number) },
     ]
   end
 
@@ -163,19 +163,19 @@ class Editor < GameWindow
     col = Mouse.x / TILE_SIZE
     row = Mouse.y / TILE_SIZE
     if Mouse.double_click?(:left) && @action == "#"
-      @stage.fill(col, row)
+      @level.fill(col, row)
     elsif Mouse.button_down?(:left)
-      @stage.place(@action, col, row) if @action
+      @level.place(@action, col, row) if @action
     elsif Mouse.button_down?(:right)
-      @stage.erase(col, row)
+      @level.erase(col, row)
     end
   end
 
   def draw
-    @stage.draw
+    @level.draw
     G.window.draw_rect(SCREEN_WIDTH, 0, 120, SCREEN_HEIGHT, 0x80ffffff)
     @buttons.each(&:draw)
-    Game.font.draw_text_rel(@stage_number.to_s, SCREEN_WIDTH + 60, 380, 0, 0.5, 0.5, 1, 1, 0xffffffff)
+    Game.font.draw_text_rel(@level_number.to_s, SCREEN_WIDTH + 60, 380, 0, 0.5, 0.5, 1, 1, 0xffffffff)
   end
 end
 

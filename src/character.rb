@@ -81,7 +81,7 @@ class Character < GameObject
     @animation_frame = 0 if @animation_frame >= FRAME_COUNT[@animation_state]
   end
 
-  def update(stage)
+  def update(level)
     forces = Vector.new
     if KB.key_down?(Gosu::KB_LEFT)
       forces.x -= MOVE_FORCE
@@ -103,13 +103,13 @@ class Character < GameObject
       @jump_timer = 0
       forces.y -= JUMP_FORCE
       reset_animation(:jumping)
-      stage.add_effect(JumpEffect.new(@x + @w / 2, @y + @h))
+      level.add_effect(JumpEffect.new(@x + @w / 2, @y + @h))
       @particles_left.stop
       @particles_right.stop
     end
 
     prev_bottom = @bottom
-    move_pushing(forces, stage)
+    move_pushing(forces, level)
     if @bottom && !prev_bottom
       reset_animation(:idle)
     end

@@ -23,9 +23,9 @@ class Mark < GameObject
              end
   end
 
-  def push(delta_x, stage)
+  def push(delta_x, level)
     prev_speed = @speed.clone
-    move_pushing(Vector.new(delta_x, 0), stage, set_speed: true)
+    move_pushing(Vector.new(delta_x, 0), level, set_speed: true)
     @speed = prev_speed
   end
 
@@ -40,8 +40,8 @@ class Mark < GameObject
     @tile = nil
   end
 
-  def update(stage)
-    move(Vector.new, stage.obstacles, [])
+  def update(level)
+    move(Vector.new, level.obstacles, [])
     @tile = calculate_tile
   end
 

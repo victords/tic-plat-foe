@@ -1,11 +1,11 @@
 require_relative 'character'
 require_relative 'mark'
 require_relative 'effect/tile_highlight_effect'
-require_relative 'effect/stage_end_effect'
+require_relative 'effect/level_end_effect'
 
 include MiniGL
 
-class Stage
+class Level
   GRID_COLOR = 0x33ffffff
   WALL_COLOR = 0xffffffff
 
@@ -24,7 +24,7 @@ class Stage
     @effects = []
     @character = Character.new
 
-    File.open("#{Res.prefix}stage/#{id}") do |f|
+    File.open("#{Res.prefix}level/#{id}") do |f|
       contents = f.read
       first_line_break = contents.index("\n")
       @title = contents[0...first_line_break]
@@ -150,7 +150,7 @@ class Stage
       e.update
       if e.dead
         @effects.delete(e)
-        @on_finish.call(finished) if e.is_a?(StageEndEffect)
+        @on_finish.call(finished) if e.is_a?(LevelEndEffect)
       end
     end
     return if finished
@@ -158,7 +158,7 @@ class Stage
     mark_type = check_combo(marks_by_tile)
     if mark_type
       result = mark_type == :circle ? :victory : :defeat
-      add_effect(StageEndEffect.new(result))
+      add_effect(LevelEndEffect.new(result))
       @finished = result
     end
   end
