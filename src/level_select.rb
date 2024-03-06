@@ -1,5 +1,7 @@
 require_relative 'constants'
 
+include MiniGL
+
 class LevelSelect
   class LevelThumbnail
     WIDTH = 120
@@ -75,10 +77,26 @@ class LevelSelect
   end
 
   def initialize
-    @thumbnails = [LevelThumbnail.new(1, 50, 50)]
+    @thumbnails = [LevelThumbnail.new(2, 50, 50)]
+    @particles = Particles.new(
+      x: 110,
+      y: 95,
+      img: Res.img(:levelThumb),
+      scale_change: :grow,
+      scale_min: 1,
+      scale_max: 1.2,
+      alpha_change: :shrink,
+      emission_interval: 45,
+      duration: 90
+    ).start
+  end
+
+  def update
+    @particles.update
   end
 
   def draw
     @thumbnails.each(&:draw)
+    @particles.draw
   end
 end
