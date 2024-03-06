@@ -16,11 +16,7 @@ class Mark < GameObject
     @start_x = @x
     @start_y = @y
     @type = type
-    @color = case type
-             when :circle then 0x3333cc
-             when :x      then 0xcc3333
-             else              0xffffff
-             end
+    @color = MARK_COLOR[type]
   end
 
   def push(delta_x, level)

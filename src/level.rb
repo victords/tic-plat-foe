@@ -6,15 +6,12 @@ require_relative 'effect/level_end_effect'
 include MiniGL
 
 class Level
-  GRID_COLOR = 0x33ffffff
-  WALL_COLOR = 0xffffffff
-
   attr_reader :marks
   attr_writer :on_finish
 
   def initialize(id)
     @id = id
-    @map = Map.new(TILE_SIZE, TILE_SIZE, SCREEN_WIDTH / TILE_SIZE, SCREEN_HEIGHT / TILE_SIZE, SCREEN_WIDTH, SCREEN_HEIGHT)
+    @map = Map.new(TILE_SIZE, TILE_SIZE, TILES_X, TILES_Y, SCREEN_WIDTH, SCREEN_HEIGHT)
     @blocks = [
       Block.new(-1, 0, 1, SCREEN_HEIGHT),
       Block.new(SCREEN_WIDTH, 0, 1, SCREEN_HEIGHT),

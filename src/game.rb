@@ -8,7 +8,7 @@ class Game
 
     def init
       @font = Gosu::Font.new(24, name: "#{Res.prefix}font/DejaVuSans.ttf")
-      @level_index = 6
+      @level_index = 0
       next_level
     end
 
