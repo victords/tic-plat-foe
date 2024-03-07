@@ -3,11 +3,22 @@ require_relative 'constants'
 include MiniGL
 
 class LevelSelect
+  L_S_TILES_X = 5
+  L_S_TILES_Y = 5
+  L_S_TILE_SIZE = SCREEN_WIDTH / L_S_TILES_X
+
+  LEVELS_LAYOUT = [
+    [2, 0],
+    [2, 1],
+  ].freeze
+
   class LevelThumbnail
     WIDTH = 120
     HEIGHT = 90
     T_TILE_SIZE = WIDTH / TILES_X
     T_SCALE = WIDTH.to_f / SCREEN_WIDTH
+
+    attr_reader :x, :y
 
     def initialize(id, x, y)
       @x = x
@@ -45,6 +56,31 @@ class LevelSelect
           i = 0
         end
       end
+
+      @selection = Particles.new(
+        source: self,
+        source_offset_x: WIDTH / 2,
+        source_offset_y: HEIGHT / 2,
+        img: Res.img(:levelThumb),
+        scale_change: :grow,
+        scale_min: 1,
+        scale_max: 1.2,
+        alpha_change: :shrink,
+        emission_interval: 45,
+        duration: 90
+      )
+    end
+
+    def select
+      @selection.start
+    end
+
+    def deselect
+      @selection.stop
+    end
+
+    def update
+      @selection.update
     end
 
     def draw
@@ -73,30 +109,32 @@ class LevelSelect
         Res.img(type).draw(@x + i * T_TILE_SIZE, @y + j * T_TILE_SIZE, 0, T_SCALE, T_SCALE, color)
       end
       Res.img(:circle).draw(@x + @start_point[0] * T_TILE_SIZE, @y + @start_point[1] * T_TILE_SIZE, 0, T_SCALE, T_SCALE)
+
+      @selection.draw
     end
   end
 
   def initialize
-    @thumbnails = [LevelThumbnail.new(2, 50, 50)]
-    @particles = Particles.new(
-      x: 110,
-      y: 95,
-      img: Res.img(:levelThumb),
-      scale_change: :grow,
-      scale_min: 1,
-      scale_max: 1.2,
-      alpha_change: :shrink,
-      emission_interval: 45,
-      duration: 90
-    ).start
+    thumb_offset_x = (L_S_TILE_SIZE - LevelThumbnail::WIDTH) / 2
+    @thumbnails = LEVELS_LAYOUT.map.with_index do |(i, j), index|
+      LevelThumbnail.new(index + 1, i * L_S_TILE_SIZE + thumb_offset_x, j * L_S_TILE_SIZE + 50)
+    end
+    @thumbnails[0].select
   end
 
   def update
-    @particles.update
+    @thumbnails.each(&:update)
   end
 
   def draw
     @thumbnails.each(&:draw)
-    @particles.draw
+    (1...L_S_TILES_X).each do |i|
+      G.window.draw_rect(i * L_S_TILE_SIZE - 1, 0, 2, SCREEN_HEIGHT, GRID_COLOR, 0)
+    end
+    (1...L_S_TILES_Y).each do |i|
+      y = i * L_S_TILE_SIZE - 1
+      next if y >= SCREEN_HEIGHT
+      G.window.draw_rect(0, y, SCREEN_WIDTH, 2, GRID_COLOR, 0)
+    end
   end
 end
