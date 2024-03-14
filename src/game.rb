@@ -1,5 +1,6 @@
 require_relative 'level'
 require_relative 'level_select'
+require_relative 'effect/transition'
 
 include MiniGL
 
@@ -27,12 +28,18 @@ class Game
     end
 
     def next_level
-      @level_index += 1
-      @level = Level.new(@level_index)
-      @level.on_finish = method(:on_level_finish)
+      @transition = Transition.new do
+        @level_index += 1
+        @level = Level.new(@level_index)
+        @level.on_finish = method(:on_level_finish)
+      end
     end
 
     def update
+      if @transition
+        @transition.update
+        @transition = nil if @transition.dead
+      end
       if @level
         @level.update
       else
@@ -41,6 +48,7 @@ class Game
     end
 
     def draw
+      @transition&.draw
       if @level
         @level.draw
       else
