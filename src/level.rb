@@ -56,6 +56,17 @@ class Level
         i = 0
       end
     end
+
+    @drawable_walls = []
+    @map.foreach do |i, j, x, y|
+      block = @blocks.any? { |o| o.x == x && o.y == y }
+      block_rt = @blocks.any? { |o| o.x == x + TILE_SIZE && o.y == y }
+      block_dn = @blocks.any? { |o| o.x == x && o.y == y + TILE_SIZE }
+      rt = i < @map.size.x - 1 && ((block && !block_rt) || (!block && block_rt))
+      dn = j < @map.size.y - 1 && ((block && !block_dn) || (!block && block_dn))
+      @drawable_walls << [x, y, true] if rt
+      @drawable_walls << [x, y, false] if dn
+    end
   end
 
   def reset
@@ -167,15 +178,15 @@ class Level
     (1...@map.size.y).each do |j|
       G.window.draw_rect(0, j * TILE_SIZE - 1, SCREEN_WIDTH, 2, GRID_COLOR, 0)
     end
-    @map.foreach do |i, j, x, y|
-      block = @blocks.any? { |o| o.x == x && o.y == y }
-      block_rt = @blocks.any? { |o| o.x == x + TILE_SIZE && o.y == y }
-      block_dn = @blocks.any? { |o| o.x == x && o.y == y + TILE_SIZE }
-      rt = i < @map.size.x - 1 && ((block && !block_rt) || (!block && block_rt))
-      dn = j < @map.size.y - 1 && ((block && !block_dn) || (!block && block_dn))
-      G.window.draw_rect(x + TILE_SIZE - 1, y, 2, TILE_SIZE, WALL_COLOR, 0) if rt
-      G.window.draw_rect(x, y + TILE_SIZE - 1, TILE_SIZE, 2, WALL_COLOR, 0) if dn
+
+    @drawable_walls.each do |(x, y, rt)|
+      if rt
+        G.window.draw_rect(x + TILE_SIZE - 1, y, 2, TILE_SIZE, WALL_COLOR, 0)
+      else
+        G.window.draw_rect(x, y + TILE_SIZE - 1, TILE_SIZE, 2, WALL_COLOR, 0)
+      end
     end
+
     @passable_blocks.each do |b|
       G.window.draw_rect(b.x + 4, b.y - 1, TILE_SIZE - 8, 2, WALL_COLOR, 0)
     end

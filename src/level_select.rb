@@ -57,6 +57,22 @@ class LevelSelect
         end
       end
 
+      @drawable_walls = []
+      (0...TILES_X).each do |i|
+        (0...TILES_Y).each do |j|
+          block = @blocks.any? { |(_i, _j)| _i == i && _j == j }
+          block_rt = @blocks.any? { |(_i, _j)| _i == i + 1 && _j == j }
+          block_dn = @blocks.any? { |(_i, _j)| _i == i && _j == j + 1 }
+          rt = i < TILES_X - 1 && ((block && !block_rt) || (!block && block_rt))
+          dn = j < TILES_Y - 1 && ((block && !block_dn) || (!block && block_dn))
+
+          x = i * T_TILE_SIZE
+          y = j * T_TILE_SIZE
+          @drawable_walls << [x, y, true] if rt
+          @drawable_walls << [x, y, false] if dn
+        end
+      end
+
       @selection = Particles.new(
         source: self,
         source_offset_x: WIDTH / 2,
@@ -84,21 +100,17 @@ class LevelSelect
     end
 
     def draw
-      (0...TILES_X).each do |i|
-        G.window.draw_rect(@x + i * T_TILE_SIZE, @y, 1, HEIGHT, GRID_COLOR, 0) if i > 0
-        (0...TILES_Y).each do |j|
-          G.window.draw_rect(@x, @y + j * T_TILE_SIZE, WIDTH, 1, GRID_COLOR, 0) if i == 0 && j > 0
-
-          block = @blocks.any? { |(_i, _j)| _i == i && _j == j }
-          block_rt = @blocks.any? { |(_i, _j)| _i == i + 1 && _j == j }
-          block_dn = @blocks.any? { |(_i, _j)| _i == i && _j == j + 1 }
-          rt = i < TILES_X - 1 && ((block && !block_rt) || (!block && block_rt))
-          dn = j < TILES_Y - 1 && ((block && !block_dn) || (!block && block_dn))
-
-          x = i * T_TILE_SIZE
-          y = j * T_TILE_SIZE
-          G.window.draw_rect(@x + x + T_TILE_SIZE, @y + y, 1, T_TILE_SIZE, WALL_COLOR, 0) if rt
-          G.window.draw_rect(@x + x, @y + y + T_TILE_SIZE, T_TILE_SIZE, 1, WALL_COLOR, 0) if dn
+      (1...TILES_X).each do |i|
+        G.window.draw_rect(@x + i * T_TILE_SIZE, @y, 1, HEIGHT, GRID_COLOR, 0)
+      end
+      (1...TILES_Y).each do |j|
+        G.window.draw_rect(@x, @y + j * T_TILE_SIZE, WIDTH, 1, GRID_COLOR, 0)
+      end
+      @drawable_walls.each do |(x, y, rt)|
+        if rt
+          G.window.draw_rect(@x + x + T_TILE_SIZE, @y + y, 1, T_TILE_SIZE, WALL_COLOR, 0)
+        else
+          G.window.draw_rect(@x + x, @y + y + T_TILE_SIZE, T_TILE_SIZE, 1, WALL_COLOR, 0)
         end
       end
       @passable_blocks.each do |(i, j)|
