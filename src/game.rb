@@ -1,5 +1,5 @@
 require_relative 'level'
-# require_relative 'level_select'
+require_relative 'level_select'
 
 include MiniGL
 
@@ -9,15 +9,13 @@ class Game
 
     def init
       @font = Gosu::Font.new(24, name: "#{Res.prefix}font/DejaVuSans.ttf")
-      @level_index = 0
-      # @level_select = LevelSelect.new
-      next_level
+      @level_select = LevelSelect.new
+      @level_select.on_select = method(:on_level_select)
     end
 
-    def next_level
-      @level_index += 1
-      @level = Level.new(@level_index)
-      @level.on_finish = method(:on_level_finish)
+    def on_level_select(id)
+      @level_index = id - 1
+      next_level
     end
 
     def on_level_finish(result)
@@ -28,14 +26,26 @@ class Game
       end
     end
 
+    def next_level
+      @level_index += 1
+      @level = Level.new(@level_index)
+      @level.on_finish = method(:on_level_finish)
+    end
+
     def update
-      @level.update
-      # @level_select.update
+      if @level
+        @level.update
+      else
+        @level_select.update
+      end
     end
 
     def draw
-      @level.draw
-      # @level_select.draw
+      if @level
+        @level.draw
+      else
+        @level_select.draw
+      end
     end
   end
 end
