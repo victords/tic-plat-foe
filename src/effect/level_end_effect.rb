@@ -1,4 +1,4 @@
-require_relative '../game'
+require_relative '../text'
 
 class LevelEndEffect
   TEXT_SCALE = 2
@@ -11,11 +11,11 @@ class LevelEndEffect
     @result = result
     @text = "#{result.to_s.upcase}!"
     @char_widths = @text.chars.map do |char|
-      Game.font.text_width(char) * TEXT_SCALE
+      Text.font.text_width(char) * TEXT_SCALE
     end
     @x = (SCREEN_WIDTH - @char_widths.sum - (@text.size - 1) * CHAR_SPACING) / 2
-    @y = (SCREEN_HEIGHT - Game.font.height * TEXT_SCALE) / 2
-    @text_helper = MiniGL::TextHelper.new(Game.font, 0, TEXT_SCALE, TEXT_SCALE)
+    @y = (SCREEN_HEIGHT - Text.font.height * TEXT_SCALE) / 2
+    @text_helper = MiniGL::TextHelper.new(Text.font, 0, TEXT_SCALE, TEXT_SCALE)
     @color, @char_delay, @fade_in_duration =
       case result
       when :victory

@@ -13,6 +13,65 @@ class LevelSelect
     [2, 1],
   ].freeze
 
+  attr_writer :on_select
+
+  def initialize
+    thumb_offset_x = (L_S_TILE_SIZE - LevelThumbnail::WIDTH) / 2
+    @thumbnails = Array.new(L_S_TILES_X) { Array.new(L_S_TILES_Y) }
+    LEVELS_LAYOUT.each_with_index do |(i, j), index|
+      @thumbnails[i][j] = LevelThumbnail.new(index + 1, i * L_S_TILE_SIZE + thumb_offset_x, j * L_S_TILE_SIZE + THUMB_OFFSET_Y)
+    end
+
+    @cursor_pos = LEVELS_LAYOUT[0]
+    level_under_cursor&.select
+  end
+
+  def update
+    if KB.key_pressed?(Gosu::KB_RETURN) || KB.key_pressed?(Gosu::KB_SPACE)
+      @on_select.call(level_under_cursor.id) if level_under_cursor
+    elsif KB.key_pressed?(Gosu::KB_UP) && @cursor_pos[1] > 0
+      move_cursor(:up)
+    elsif KB.key_pressed?(Gosu::KB_RIGHT) && @cursor_pos[0] < L_S_TILES_X - 1
+      move_cursor(:rt)
+    elsif KB.key_pressed?(Gosu::KB_DOWN) && @cursor_pos[1] < L_S_TILES_Y - 1
+      move_cursor(:dn)
+    elsif KB.key_pressed?(Gosu::KB_LEFT) && @cursor_pos[0] > 0
+      move_cursor(:lf)
+    end
+
+    @thumbnails.flatten.compact.each(&:update)
+  end
+
+  def draw
+    @thumbnails.flatten.compact.each(&:draw)
+    (1...L_S_TILES_X).each do |i|
+      G.window.draw_rect(i * L_S_TILE_SIZE - 1, 0, 2, SCREEN_HEIGHT, GRID_COLOR, 0)
+    end
+    (1...L_S_TILES_Y).each do |i|
+      y = i * L_S_TILE_SIZE - 1
+      next if y >= SCREEN_HEIGHT
+      G.window.draw_rect(0, y, SCREEN_WIDTH, 2, GRID_COLOR, 0)
+    end
+    Res.img(:circle).draw((@cursor_pos[0] + 1) * L_S_TILE_SIZE - 40, @cursor_pos[1] * L_S_TILE_SIZE + 7, 0, 0.75, 0.75, 0xffffffff)
+  end
+
+  private
+
+  def level_under_cursor
+    @thumbnails[@cursor_pos[0]][@cursor_pos[1]]
+  end
+
+  def move_cursor(dir)
+    level_under_cursor&.deselect
+    case dir
+    when :up then @cursor_pos[1] -= 1
+    when :rt then @cursor_pos[0] += 1
+    when :dn then @cursor_pos[1] += 1
+    else          @cursor_pos[0] -= 1
+    end
+    level_under_cursor&.select
+  end
+
   class LevelThumbnail
     WIDTH = 120
     HEIGHT = 90
@@ -102,7 +161,7 @@ class LevelSelect
     end
 
     def draw
-      Game.font.draw_text("Level #{@id}", @x, @y - THUMB_OFFSET_Y + 10, 0, 1, 1, 0xffffffff)
+      Text.write("Level #{@id}", @x, @y - THUMB_OFFSET_Y + 10)
 
       (1...TILES_X).each do |i|
         G.window.draw_rect(@x + i * T_TILE_SIZE, @y, 1, HEIGHT, GRID_COLOR, 0)
@@ -128,64 +187,5 @@ class LevelSelect
 
       @selection.draw
     end
-  end
-
-  attr_writer :on_select
-
-  def initialize
-    thumb_offset_x = (L_S_TILE_SIZE - LevelThumbnail::WIDTH) / 2
-    @thumbnails = Array.new(L_S_TILES_X) { Array.new(L_S_TILES_Y) }
-    LEVELS_LAYOUT.each_with_index do |(i, j), index|
-      @thumbnails[i][j] = LevelThumbnail.new(index + 1, i * L_S_TILE_SIZE + thumb_offset_x, j * L_S_TILE_SIZE + THUMB_OFFSET_Y)
-    end
-
-    @cursor_pos = LEVELS_LAYOUT[0]
-    level_under_cursor&.select
-  end
-
-  def update
-    if KB.key_pressed?(Gosu::KB_RETURN) || KB.key_pressed?(Gosu::KB_SPACE)
-      @on_select.call(level_under_cursor.id) if level_under_cursor
-    elsif KB.key_pressed?(Gosu::KB_UP) && @cursor_pos[1] > 0
-      move_cursor(:up)
-    elsif KB.key_pressed?(Gosu::KB_RIGHT) && @cursor_pos[0] < L_S_TILES_X - 1
-      move_cursor(:rt)
-    elsif KB.key_pressed?(Gosu::KB_DOWN) && @cursor_pos[1] < L_S_TILES_Y - 1
-      move_cursor(:dn)
-    elsif KB.key_pressed?(Gosu::KB_LEFT) && @cursor_pos[0] > 0
-      move_cursor(:lf)
-    end
-
-    @thumbnails.flatten.compact.each(&:update)
-  end
-
-  def draw
-    @thumbnails.flatten.compact.each(&:draw)
-    (1...L_S_TILES_X).each do |i|
-      G.window.draw_rect(i * L_S_TILE_SIZE - 1, 0, 2, SCREEN_HEIGHT, GRID_COLOR, 0)
-    end
-    (1...L_S_TILES_Y).each do |i|
-      y = i * L_S_TILE_SIZE - 1
-      next if y >= SCREEN_HEIGHT
-      G.window.draw_rect(0, y, SCREEN_WIDTH, 2, GRID_COLOR, 0)
-    end
-    Res.img(:circle).draw((@cursor_pos[0] + 1) * L_S_TILE_SIZE - 40, @cursor_pos[1] * L_S_TILE_SIZE + 7, 0, 0.75, 0.75, 0xffffffff)
-  end
-
-  private
-
-  def level_under_cursor
-    @thumbnails[@cursor_pos[0]][@cursor_pos[1]]
-  end
-
-  def move_cursor(dir)
-    level_under_cursor&.deselect
-    case dir
-    when :up then @cursor_pos[1] -= 1
-    when :rt then @cursor_pos[0] += 1
-    when :dn then @cursor_pos[1] += 1
-    else          @cursor_pos[0] -= 1
-    end
-    level_under_cursor&.select
   end
 end

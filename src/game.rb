@@ -6,10 +6,7 @@ include MiniGL
 
 class Game
   class << self
-    attr_reader :font
-
     def init
-      @font = Gosu::Font.new(24, name: "#{Res.prefix}font/DejaVuSans.ttf")
       @level_select = LevelSelect.new
       @level_select.on_select = method(:on_level_select)
     end

@@ -194,7 +194,7 @@ class Level
     @character.draw
     @effects.each(&:draw)
 
-    Game.font.draw_text("Level #{@id}", 10, 5, 0, 0.75, 0.75, 0x99ffffff)
-    Game.font.draw_text(@title, 10, 28, 0, 1, 1, 0xffffffff)
+    Text.write("Level #{@id}", 10, 5, 0.75, DIM_TEXT_COLOR)
+    Text.write(@title, 10, 28)
   end
 end

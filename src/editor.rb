@@ -1,4 +1,5 @@
 require_relative "constants"
+require_relative "text"
 require_relative "game"
 
 include MiniGL
@@ -107,7 +108,7 @@ class EditorLevel < Level
     @marks.each(&:draw)
 
     return unless @start_point
-    Game.font.draw_text_rel("S", (@start_point.x + 0.5) * TILE_SIZE, (@start_point.y + 0.5) * TILE_SIZE, 0, 0.5, 0.5, 1, 1, 0xffffffff)
+    Text.write_center("S", (@start_point.x + 0.5) * TILE_SIZE, (@start_point.y + 0.5) * TILE_SIZE)
   end
 
   private
@@ -128,6 +129,7 @@ class Editor < GameWindow
   def initialize
     super(920, 600, false)
     Res.prefix = "#{File.expand_path(__FILE__).split("/")[0..-3].join("/")}/data"
+    Text.init
     Game.init
 
     @level_number = 1
@@ -136,7 +138,7 @@ class Editor < GameWindow
       x: SCREEN_WIDTH,
       width: 40,
       height: 40,
-      font: Game.font,
+      font: Text.font,
       text_color: 0xffffff,
       over_text_color: 0xdddddd,
       down_text_color: 0xbbbbbb,
@@ -175,7 +177,7 @@ class Editor < GameWindow
     @level.draw
     G.window.draw_rect(SCREEN_WIDTH, 0, 120, SCREEN_HEIGHT, 0x80ffffff)
     @buttons.each(&:draw)
-    Game.font.draw_text_rel(@level_number.to_s, SCREEN_WIDTH + 60, 380, 0, 0.5, 0.5, 1, 1, 0xffffffff)
+    Text.write_center(@level_number.to_s, SCREEN_WIDTH + 60, 380)
   end
 end
 
