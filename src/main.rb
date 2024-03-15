@@ -12,12 +12,13 @@ class TicPlatFoe < GameWindow
     Game.init
   end
 
+  def needs_cursor?
+    false
+  end
+
   def update
-    Mouse.update
     KB.update
     Game.update
-
-    close if KB.key_pressed?(Gosu::KB_ESCAPE)
   end
 
   def draw

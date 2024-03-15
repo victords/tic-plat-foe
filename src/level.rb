@@ -67,6 +67,35 @@ class Level
       @drawable_walls << [x, y, true] if rt
       @drawable_walls << [x, y, false] if dn
     end
+
+    @pause_menu = Panel.new(0, 0, 350, 250, [
+      Button.new(x: 0, y: -50, font: Text.font, text: "Resume", text_color: DEFAULT_TEXT_COLOR, width: 250, height: 40, anchor: :center) do
+        @pause_menu.visible = false
+      end,
+      Button.new(x: 0, y: 0, font: Text.font, text: "Back to level selection", text_color: DEFAULT_TEXT_COLOR, width: 250, height: 40, anchor: :center) do
+        Game.back_to_level_select
+      end,
+      Button.new(x: 0, y: 50, font: Text.font, text: "Back to main menu", text_color: DEFAULT_TEXT_COLOR, width: 250, height: 40, anchor: :center) do
+        G.window.close # TODO
+      end,
+    ], :panel, :tiled, nil, 1, 1, :center)
+    @pause_menu.visible = false
+    @pause_menu_button_index = 0
+    @pause_menu_selection = @pause_menu.controls.map do |btn|
+      Particles.new(
+        source: btn,
+        source_offset_x: btn.w / 2,
+        source_offset_y: btn.h / 2,
+        img: Res.img(:btnHighlight),
+        scale_change: :grow,
+        scale_min: 1,
+        scale_max: 1.2,
+        alpha_change: :shrink,
+        emission_interval: 30,
+        duration: 45
+      )
+    end
+    @pause_menu_selection[0].start
   end
 
   def reset
@@ -141,7 +170,7 @@ class Level
   end
 
   def update
-    unless @finished
+    unless @finished || @pause_menu.visible
       reset if KB.key_pressed?(Gosu::KB_R)
 
       @character.update(self)
@@ -162,6 +191,26 @@ class Level
       end
     end
     return if finished
+
+    @pause_menu.visible = !@pause_menu.visible if KB.key_pressed?(Gosu::KB_ESCAPE)
+    if @pause_menu.visible
+      if KB.key_pressed?(Gosu::KB_RETURN) || KB.key_pressed?(Gosu::KB_SPACE)
+        @pause_menu.controls[@pause_menu_button_index].click
+      elsif KB.key_pressed?(Gosu::KB_UP)
+        @pause_menu_selection[@pause_menu_button_index].stop
+        @pause_menu_button_index -= 1
+        @pause_menu_button_index = @pause_menu.controls.size - 1 if @pause_menu_button_index < 0
+        @pause_menu_selection[@pause_menu_button_index].start
+      elsif KB.key_pressed?(Gosu::KB_DOWN)
+        @pause_menu_selection[@pause_menu_button_index].stop
+        @pause_menu_button_index += 1
+        @pause_menu_button_index = 0 if @pause_menu_button_index >= @pause_menu.controls.size
+        @pause_menu_selection[@pause_menu_button_index].start
+      end
+
+      @pause_menu_selection.each(&:update)
+      return
+    end
 
     mark_type = check_combo(marks_by_tile)
     if mark_type
@@ -196,5 +245,8 @@ class Level
 
     Text.write("Level #{@id}", 10, 5, 0.75, DIM_TEXT_COLOR)
     Text.write(@title, 10, 28)
+
+    @pause_menu.draw
+    @pause_menu_selection.each(&:draw) if @pause_menu.visible
   end
 end

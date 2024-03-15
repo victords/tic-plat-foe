@@ -32,6 +32,12 @@ class Game
       end
     end
 
+    def back_to_level_select
+      @transition = Transition.new do
+        @level = nil
+      end
+    end
+
     def update
       if @transition
         @transition.update
