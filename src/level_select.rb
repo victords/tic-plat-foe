@@ -11,19 +11,31 @@ class LevelSelect
   LEVELS_LAYOUT = [
     [2, 0],
     [2, 1],
+    [3, 1],
+    [3, 2],
   ].freeze
 
   attr_writer :on_select
 
-  def initialize
+  def initialize(last_level)
+    @last_level = last_level
+
     thumb_offset_x = (L_S_TILE_SIZE - LevelThumbnail::WIDTH) / 2
     @thumbnails = Array.new(L_S_TILES_X) { Array.new(L_S_TILES_Y) }
-    LEVELS_LAYOUT.each_with_index do |(i, j), index|
+    LEVELS_LAYOUT[0...last_level].each_with_index do |(i, j), index|
       @thumbnails[i][j] = LevelThumbnail.new(index + 1, i * L_S_TILE_SIZE + thumb_offset_x, j * L_S_TILE_SIZE + THUMB_OFFSET_Y)
     end
 
     @cursor_pos = LEVELS_LAYOUT[0]
     level_under_cursor&.select
+  end
+
+  def last_level=(new_value)
+    return unless new_value > @last_level
+
+    @last_level = new_value
+    (i, j) = LEVELS_LAYOUT[new_value - 1]
+    @thumbnails[i][j] = LevelThumbnail.new(new_value, i * L_S_TILE_SIZE + (L_S_TILE_SIZE - LevelThumbnail::WIDTH) / 2, j * L_S_TILE_SIZE + THUMB_OFFSET_Y)
   end
 
   def update

@@ -7,7 +7,8 @@ include MiniGL
 class Game
   class << self
     def init
-      @level_select = LevelSelect.new
+      @last_level = 1
+      @level_select = LevelSelect.new(@last_level)
       @level_select.on_select = method(:on_level_select)
     end
 
@@ -18,15 +19,21 @@ class Game
 
     def on_level_finish(result)
       if result == :victory
-        next_level
+        if @level_index == @last_level
+          @last_level += 1
+          @level_select.last_level = @last_level
+          next_level
+        else
+          back_to_level_select
+        end
       else
         @level.reset
       end
     end
 
     def next_level
+      @level_index += 1
       @transition = Transition.new do
-        @level_index += 1
         @level = Level.new(@level_index)
         @level.on_finish = method(:on_level_finish)
       end
