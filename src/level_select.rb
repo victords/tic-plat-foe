@@ -27,6 +27,7 @@ class LevelSelect
     end
 
     @cursor_pos = LEVELS_LAYOUT[0]
+    @character = Character.new(@cursor_pos)
     level_under_cursor&.select
   end
 
@@ -52,10 +53,10 @@ class LevelSelect
     end
 
     @thumbnails.flatten.compact.each(&:update)
+    @character.update
   end
 
   def draw
-    @thumbnails.flatten.compact.each(&:draw)
     (1...L_S_TILES_X).each do |i|
       G.window.draw_rect(i * L_S_TILE_SIZE - 1, 0, 2, SCREEN_HEIGHT, GRID_COLOR, 0)
     end
@@ -64,7 +65,8 @@ class LevelSelect
       next if y >= SCREEN_HEIGHT
       G.window.draw_rect(0, y, SCREEN_WIDTH, 2, GRID_COLOR, 0)
     end
-    Res.img(:circle).draw((@cursor_pos[0] + 1) * L_S_TILE_SIZE - 40, @cursor_pos[1] * L_S_TILE_SIZE + 7, 0, 0.75, 0.75, 0xffffffff)
+    @thumbnails.flatten.compact.each(&:draw)
+    @character.draw
   end
 
   private
@@ -198,6 +200,32 @@ class LevelSelect
       Res.img(:circle).draw(@x + @start_point[0] * T_TILE_SIZE, @y + @start_point[1] * T_TILE_SIZE, 0, T_SCALE, T_SCALE)
 
       @selection.draw
+    end
+  end
+
+  class Character
+    include CharacterAnimation
+
+    SCALE = 0.75
+
+    def initialize(pos)
+      @pos = pos
+      @img = Res.img(:circle)
+      @w = SCALE * @img.width
+      @h = SCALE * @img.height
+      init_animation
+    end
+
+    def update
+      animate
+    end
+
+    def draw
+      @img.draw((@pos[0] + 1) * L_S_TILE_SIZE - 50 + SCALE * @offset_x,
+                @pos[1] * L_S_TILE_SIZE + 7 + SCALE * @offset_y, 0,
+                SCALE * @scale_x,
+                SCALE * @scale_y,
+                0xffffffff)
     end
   end
 end
