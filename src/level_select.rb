@@ -20,10 +20,10 @@ class LevelSelect
   def initialize(last_level)
     @last_level = last_level
 
-    thumb_offset_x = (L_S_TILE_SIZE - LevelThumbnail::WIDTH) / 2
-    @thumbnails = Array.new(L_S_TILES_X) { Array.new(L_S_TILES_Y) }
+    @elements = Array.new(L_S_TILES_X) { Array.new(L_S_TILES_Y) }
+    @thumbnails = []
     LEVELS_LAYOUT[0...last_level].each_with_index do |(i, j), index|
-      @thumbnails[i][j] = LevelThumbnail.new(index + 1, i * L_S_TILE_SIZE + thumb_offset_x, j * L_S_TILE_SIZE + THUMB_OFFSET_Y)
+      add_thumbnail(index + 1, i, j, index + 1 < last_level)
     end
 
     @cursor_pos = LEVELS_LAYOUT[0]
@@ -34,9 +34,10 @@ class LevelSelect
   def last_level=(new_value)
     return unless new_value > @last_level
 
+    @thumbnails.each(&:passed!)
     @last_level = new_value
     (i, j) = LEVELS_LAYOUT[new_value - 1]
-    @thumbnails[i][j] = LevelThumbnail.new(new_value, i * L_S_TILE_SIZE + (L_S_TILE_SIZE - LevelThumbnail::WIDTH) / 2, j * L_S_TILE_SIZE + THUMB_OFFSET_Y)
+    add_thumbnail(new_value, i, j, false)
   end
 
   def update
@@ -52,7 +53,7 @@ class LevelSelect
       move_cursor(:lf)
     end
 
-    @thumbnails.flatten.compact.each(&:update)
+    @thumbnails.each(&:update)
     @character.update
   end
 
@@ -65,14 +66,22 @@ class LevelSelect
       next if y >= SCREEN_HEIGHT
       G.window.draw_rect(0, y, SCREEN_WIDTH, 2, GRID_COLOR, 0)
     end
-    @thumbnails.flatten.compact.each(&:draw)
+    @thumbnails.each(&:draw)
     @character.draw
   end
 
   private
 
+  def add_thumbnail(level, i, j, passed)
+    @elements[i][j] = LevelThumbnail.new(level,
+                                         i * L_S_TILE_SIZE + (L_S_TILE_SIZE - LevelThumbnail::WIDTH) / 2,
+                                         j * L_S_TILE_SIZE + THUMB_OFFSET_Y,
+                                         passed)
+    @thumbnails << @elements[i][j]
+  end
+
   def level_under_cursor
-    @thumbnails[@cursor_pos[0]][@cursor_pos[1]]
+    @elements[@cursor_pos[0]][@cursor_pos[1]]
   end
 
   def move_cursor(dir)
@@ -94,10 +103,11 @@ class LevelSelect
 
     attr_reader :id, :x, :y
 
-    def initialize(id, x, y)
+    def initialize(id, x, y, passed)
       @id = id
       @x = x
       @y = y
+      @passed = passed
       @blocks = []
       @passable_blocks = []
       @marks = []
@@ -170,6 +180,10 @@ class LevelSelect
       @selection.stop
     end
 
+    def passed!
+      @passed = true
+    end
+
     def update
       @selection.update
     end
@@ -197,7 +211,12 @@ class LevelSelect
         color = 0xff000000 | MARK_COLOR[type]
         Res.img(type).draw(@x + i * T_TILE_SIZE, @y + j * T_TILE_SIZE, 0, T_SCALE, T_SCALE, color)
       end
-      Res.img(:circle).draw(@x + @start_point[0] * T_TILE_SIZE, @y + @start_point[1] * T_TILE_SIZE, 0, T_SCALE, T_SCALE)
+
+      circle = Res.img(:circle)
+      circle.draw(@x + @start_point[0] * T_TILE_SIZE, @y + @start_point[1] * T_TILE_SIZE, 0, T_SCALE, T_SCALE)
+      if @passed
+        circle.draw(@x + (WIDTH - 2 * circle.width) / 2, @y + (HEIGHT - 2 * circle.height) / 2, 0, 2, 2, (0x66 << 24) | MARK_COLOR[:circle])
+      end
 
       @selection.draw
     end
