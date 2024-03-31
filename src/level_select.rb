@@ -3,22 +3,26 @@ require_relative 'constants'
 include MiniGL
 
 class LevelSelect
-  L_S_TILES_X = 5
-  L_S_TILES_Y = 5
-  L_S_TILE_SIZE = SCREEN_WIDTH / L_S_TILES_X
+  L_S_TILES_X = 10
+  L_S_TILES_Y = 10
+  L_S_TILE_SIZE = 160
   THUMB_OFFSET_Y = 50
 
   LEVELS_LAYOUT = [
     [2, 0],
-    [2, 1],
-    [3, 1],
-    [3, 2],
+    [2, 2],
+    [4, 2],
+    [6, 2],
+    [6, 4],
+    [6, 7],
   ].freeze
 
   attr_writer :on_select
 
   def initialize(last_level)
     @last_level = last_level
+
+    @map = Map.new(L_S_TILE_SIZE, L_S_TILE_SIZE, L_S_TILES_X, L_S_TILES_Y)
 
     @elements = Array.new(L_S_TILES_X) { Array.new(L_S_TILES_Y) }
     @thumbnails = []
@@ -34,7 +38,7 @@ class LevelSelect
   def last_level=(new_value)
     return unless new_value > @last_level
 
-    @thumbnails.each(&:passed!)
+    @thumbnails[@last_level - 1].passed!
     @last_level = new_value
     (i, j) = LEVELS_LAYOUT[new_value - 1]
     add_thumbnail(new_value, i, j, false)
@@ -59,15 +63,15 @@ class LevelSelect
 
   def draw
     (1...L_S_TILES_X).each do |i|
-      G.window.draw_rect(i * L_S_TILE_SIZE - 1, 0, 2, SCREEN_HEIGHT, GRID_COLOR, 0)
+      x = i * L_S_TILE_SIZE - 1 - @map.cam.x
+      G.window.draw_rect(x, 0, 2, SCREEN_HEIGHT, GRID_COLOR, 0) if x >= -1 && x < SCREEN_WIDTH
     end
     (1...L_S_TILES_Y).each do |i|
-      y = i * L_S_TILE_SIZE - 1
-      next if y >= SCREEN_HEIGHT
-      G.window.draw_rect(0, y, SCREEN_WIDTH, 2, GRID_COLOR, 0)
+      y = i * L_S_TILE_SIZE - 1 - @map.cam.y
+      G.window.draw_rect(0, y, SCREEN_WIDTH, 2, GRID_COLOR, 0) if y >= -1 && y < SCREEN_HEIGHT
     end
-    @thumbnails.each(&:draw)
-    @character.draw
+    @thumbnails.each { |t| t.draw(@map) }
+    @character.draw(@map)
   end
 
   private
@@ -93,6 +97,17 @@ class LevelSelect
     else          @cursor_pos[0] -= 1
     end
     level_under_cursor&.select
+
+    screen_pos = @map.get_screen_pos(*@cursor_pos)
+    if screen_pos.x >= 4 * L_S_TILE_SIZE
+      @map.move_camera(2 * L_S_TILE_SIZE, 0)
+    elsif screen_pos.x < L_S_TILE_SIZE
+      @map.move_camera(-2 * L_S_TILE_SIZE, 0)
+    elsif screen_pos.y >= 3 * L_S_TILE_SIZE
+      @map.move_camera(0, 2 * L_S_TILE_SIZE)
+    elsif screen_pos.y < L_S_TILE_SIZE
+      @map.move_camera(0, -2 * L_S_TILE_SIZE)
+    end
   end
 
   class LevelThumbnail
@@ -188,37 +203,42 @@ class LevelSelect
       @selection.update
     end
 
-    def draw
-      Text.write("Level #{@id}", @x, @y - THUMB_OFFSET_Y + 10)
+    def draw(map)
+      cam_x = map.cam.x
+      cam_y = map.cam.y
+
+      Text.write("Level #{@id}", @x - cam_x, @y - THUMB_OFFSET_Y + 10 - cam_y)
 
       (1...TILES_X).each do |i|
-        G.window.draw_rect(@x + i * T_TILE_SIZE, @y, 1, HEIGHT, GRID_COLOR, 0)
+        G.window.draw_rect(@x + i * T_TILE_SIZE - cam_x, @y - cam_y, 1, HEIGHT, GRID_COLOR, 0)
       end
       (1...TILES_Y).each do |j|
-        G.window.draw_rect(@x, @y + j * T_TILE_SIZE, WIDTH, 1, GRID_COLOR, 0)
+        G.window.draw_rect(@x - cam_x, @y + j * T_TILE_SIZE - cam_y, WIDTH, 1, GRID_COLOR, 0)
       end
       @drawable_walls.each do |(x, y, rt)|
         if rt
-          G.window.draw_rect(@x + x + T_TILE_SIZE, @y + y, 1, T_TILE_SIZE, WALL_COLOR, 0)
+          G.window.draw_rect(@x + x + T_TILE_SIZE - cam_x, @y + y - cam_y, 1, T_TILE_SIZE, WALL_COLOR, 0)
         else
-          G.window.draw_rect(@x + x, @y + y + T_TILE_SIZE, T_TILE_SIZE, 1, WALL_COLOR, 0)
+          G.window.draw_rect(@x + x - cam_x, @y + y + T_TILE_SIZE - cam_y, T_TILE_SIZE, 1, WALL_COLOR, 0)
         end
       end
       @passable_blocks.each do |(i, j)|
-        G.window.draw_rect(@x + i * T_TILE_SIZE + 1, @y + j * T_TILE_SIZE, T_TILE_SIZE - 2, 1, WALL_COLOR, 0)
+        G.window.draw_rect(@x + i * T_TILE_SIZE + 1 - cam_x, @y + j * T_TILE_SIZE - cam_y, T_TILE_SIZE - 2, 1, WALL_COLOR, 0)
       end
       @marks.each do |(i, j, type)|
         color = 0xff000000 | MARK_COLOR[type]
-        Res.img(type).draw(@x + i * T_TILE_SIZE, @y + j * T_TILE_SIZE, 0, T_SCALE, T_SCALE, color)
+        Res.img(type).draw(@x + i * T_TILE_SIZE - cam_x, @y + j * T_TILE_SIZE - cam_y, 0, T_SCALE, T_SCALE, color)
       end
 
       circle = Res.img(:circle)
-      circle.draw(@x + @start_point[0] * T_TILE_SIZE, @y + @start_point[1] * T_TILE_SIZE, 0, T_SCALE, T_SCALE)
+      circle.draw(@x + @start_point[0] * T_TILE_SIZE - cam_x, @y + @start_point[1] * T_TILE_SIZE - cam_y, 0, T_SCALE, T_SCALE)
       if @passed
-        circle.draw(@x + (WIDTH - 2 * circle.width) / 2, @y + (HEIGHT - 2 * circle.height) / 2, 0, 2, 2, (0x66 << 24) | MARK_COLOR[:circle])
+        circle.draw(@x + (WIDTH - 2 * circle.width) / 2 - cam_x,
+                    @y + (HEIGHT - 2 * circle.height) / 2 - cam_y,
+                    0, 2, 2, (0x66 << 24) | MARK_COLOR[:circle])
       end
 
-      @selection.draw
+      @selection.draw(map)
     end
   end
 
@@ -239,9 +259,10 @@ class LevelSelect
       animate
     end
 
-    def draw
-      @img.draw((@pos[0] + 1) * L_S_TILE_SIZE - 50 + SCALE * @offset_x,
-                @pos[1] * L_S_TILE_SIZE + 7 + SCALE * @offset_y, 0,
+    def draw(map)
+      @img.draw((@pos[0] + 1) * L_S_TILE_SIZE - 50 + SCALE * @offset_x - map.cam.x,
+                @pos[1] * L_S_TILE_SIZE + 7 + SCALE * @offset_y - map.cam.y,
+                0,
                 SCALE * @scale_x,
                 SCALE * @scale_y,
                 0xffffffff)
