@@ -7,6 +7,7 @@ class LevelSelect
   L_S_TILES_Y = 10
   L_S_TILE_SIZE = 160
   THUMB_OFFSET_Y = 50
+  CAM_SNAP_THRESHOLD = 2
 
   LEVELS_LAYOUT = [
     [2, 0],
@@ -45,6 +46,17 @@ class LevelSelect
   end
 
   def update
+    if @camera_target
+      delta_x = @camera_target.x - @map.cam.x
+      delta_y = @camera_target.y - @map.cam.y
+      if delta_x.abs <= CAM_SNAP_THRESHOLD && delta_y.abs <= CAM_SNAP_THRESHOLD
+        @map.set_camera(@camera_target.x, @camera_target.y)
+        @camera_target = nil
+      else
+        @map.move_camera(delta_x * 0.2, delta_y * 0.2)
+      end
+    end
+
     if KB.key_pressed?(Gosu::KB_RETURN) || KB.key_pressed?(Gosu::KB_SPACE)
       @on_select.call(level_under_cursor.id) if level_under_cursor
     elsif KB.key_pressed?(Gosu::KB_UP) && @cursor_pos[1] > 0
@@ -100,14 +112,24 @@ class LevelSelect
 
     screen_pos = @map.get_screen_pos(*@cursor_pos)
     if screen_pos.x >= 4 * L_S_TILE_SIZE
-      @map.move_camera(2 * L_S_TILE_SIZE, 0)
+      move_camera(2 * L_S_TILE_SIZE, 0)
     elsif screen_pos.x < L_S_TILE_SIZE
-      @map.move_camera(-2 * L_S_TILE_SIZE, 0)
+      move_camera(-2 * L_S_TILE_SIZE, 0)
     elsif screen_pos.y >= 3 * L_S_TILE_SIZE
-      @map.move_camera(0, 2 * L_S_TILE_SIZE)
+      move_camera(0, 2 * L_S_TILE_SIZE)
     elsif screen_pos.y < L_S_TILE_SIZE
-      @map.move_camera(0, -2 * L_S_TILE_SIZE)
+      move_camera(0, -2 * L_S_TILE_SIZE)
     end
+  end
+
+  def move_camera(x, y)
+    target_x = (@camera_target&.x || @map.cam.x) + x
+    target_x = [[target_x, 0].max, @map.instance_variable_get(:@max_x)].min
+    target_y = (@camera_target&.y || @map.cam.y) + y
+    target_y = [[target_y, 0].max, @map.instance_variable_get(:@max_y)].min
+    return if target_x == @map.cam.x && target_y == @map.cam.y
+
+    @camera_target = Vector.new(target_x, target_y)
   end
 
   class LevelThumbnail
