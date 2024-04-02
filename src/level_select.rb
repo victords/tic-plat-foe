@@ -103,10 +103,18 @@ class LevelSelect
   def move_cursor(dir)
     level_under_cursor&.deselect
     case dir
-    when :up then @cursor_pos[1] -= 1
-    when :rt then @cursor_pos[0] += 1
-    when :dn then @cursor_pos[1] += 1
-    else          @cursor_pos[0] -= 1
+    when :up
+      @cursor_pos[1] -= 1
+      @character.move(0, -1)
+    when :rt
+      @cursor_pos[0] += 1
+      @character.move(1, 0)
+    when :dn
+      @cursor_pos[1] += 1
+      @character.move(0, 1)
+    else
+      @cursor_pos[0] -= 1
+      @character.move(-1, 0)
     end
     level_under_cursor&.select
 
@@ -276,20 +284,37 @@ class LevelSelect
     SCALE = 0.75
 
     def initialize(pos)
-      @pos = pos
+      @x = (pos[0] + 1) * L_S_TILE_SIZE - 50
+      @y = pos[1] * L_S_TILE_SIZE + 7
       @img = Res.img(:circle)
       @w = SCALE * @img.width
       @h = SCALE * @img.height
       init_animation
     end
 
+    def move(x, y)
+      @target = Vector.new((@target&.x || @x) + x * L_S_TILE_SIZE, (@target&.y || @y) + y * L_S_TILE_SIZE)
+    end
+
     def update
+      if @target
+        delta_x = @target.x - @x
+        delta_y = @target.y - @y
+        if delta_x.abs < 0.1 && delta_y.abs < 0.1
+          @x = @target.x
+          @y = @target.y
+          @target = nil
+        else
+          @x += delta_x * 0.2
+          @y += delta_y * 0.2
+        end
+      end
       animate
     end
 
     def draw(map)
-      @img.draw((@pos[0] + 1) * L_S_TILE_SIZE - 50 + SCALE * @offset_x - map.cam.x,
-                @pos[1] * L_S_TILE_SIZE + 7 + SCALE * @offset_y - map.cam.y,
+      @img.draw(@x + SCALE * @offset_x - map.cam.x,
+                @y + SCALE * @offset_y - map.cam.y,
                 0,
                 SCALE * @scale_x,
                 SCALE * @scale_y,
