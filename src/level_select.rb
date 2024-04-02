@@ -111,18 +111,24 @@ class LevelSelect
     level_under_cursor&.select
 
     screen_pos = @map.get_screen_pos(*@cursor_pos)
+    move_x = 0
+    move_y = 0
     if screen_pos.x >= 4 * L_S_TILE_SIZE
-      move_camera(2 * L_S_TILE_SIZE, 0)
+      move_x = 2 * L_S_TILE_SIZE
     elsif screen_pos.x < L_S_TILE_SIZE
-      move_camera(-2 * L_S_TILE_SIZE, 0)
-    elsif screen_pos.y >= 3 * L_S_TILE_SIZE
-      move_camera(0, 2 * L_S_TILE_SIZE)
-    elsif screen_pos.y < L_S_TILE_SIZE
-      move_camera(0, -2 * L_S_TILE_SIZE)
+      move_x = -2 * L_S_TILE_SIZE
     end
+    if screen_pos.y >= 3 * L_S_TILE_SIZE
+      move_y = 2 * L_S_TILE_SIZE
+    elsif screen_pos.y < L_S_TILE_SIZE
+      move_y = -2 * L_S_TILE_SIZE
+    end
+    move_camera(move_x, move_y)
   end
 
   def move_camera(x, y)
+    return if x.zero? && y.zero?
+
     target_x = (@camera_target&.x || @map.cam.x) + x
     target_x = [[target_x, 0].max, @map.instance_variable_get(:@max_x)].min
     target_y = (@camera_target&.y || @map.cam.y) + y
