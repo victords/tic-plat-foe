@@ -1,5 +1,5 @@
 require_relative 'level'
-require_relative 'level_select'
+require_relative 'level_select/map'
 require_relative 'effect/transition'
 
 include MiniGL
@@ -8,7 +8,7 @@ class Game
   class << self
     def init
       @last_level = 1
-      @level_select = LevelSelect.new(@last_level)
+      @level_select = LevelSelect::Map.new(@last_level)
       @level_select.on_select = method(:on_level_select)
     end
 

@@ -18,3 +18,4 @@ MARK_COLOR = {
 }.freeze
 DEFAULT_TEXT_COLOR = 0xffffffff
 DIM_TEXT_COLOR = 0x99ffffff
+L_S_TILE_SIZE = 160
