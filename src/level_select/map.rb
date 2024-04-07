@@ -3,9 +3,10 @@ require_relative 'character'
 
 module LevelSelect
   class Map
-    L_S_TILES_X = 10
-    L_S_TILES_Y = 10
     CAM_SNAP_THRESHOLD = 2
+
+    FADE_DURATION = 30
+    ZOOM_DURATION = 90
 
     LEVELS_LAYOUT = [
       [2, 0],
@@ -21,9 +22,9 @@ module LevelSelect
     def initialize(last_level)
       @last_level = last_level
 
-      @map = MiniGL::Map.new(L_S_TILE_SIZE, L_S_TILE_SIZE, L_S_TILES_X, L_S_TILES_Y)
+      @map = MiniGL::Map.new(L_S_TILE_SIZE, L_S_TILE_SIZE, TILES_X, TILES_Y)
 
-      @elements = Array.new(L_S_TILES_X) { Array.new(L_S_TILES_Y) }
+      @elements = Array.new(TILES_X) { Array.new(TILES_Y) }
       @thumbnails = []
       LEVELS_LAYOUT[0...last_level].each_with_index do |(i, j), index|
         add_thumbnail(index + 1, i, j, index + 1 < last_level)
@@ -32,6 +33,9 @@ module LevelSelect
       @cursor_pos = LEVELS_LAYOUT[0]
       @character = Character.new(@cursor_pos)
       level_under_cursor&.select
+
+      @tile_size = L_S_TILE_SIZE
+      @state = :default
     end
 
     def last_level=(new_value)
@@ -55,13 +59,48 @@ module LevelSelect
         end
       end
 
-      if KB.key_pressed?(Gosu::KB_RETURN) || KB.key_pressed?(Gosu::KB_SPACE)
-        @on_select.call(level_under_cursor.id) if level_under_cursor
+      @timer += 1 unless @state == :default || @state == :zoomed_out
+      case @state
+      when :zooming_out_fade, :zooming_in_fade
+        if @timer >= FADE_DURATION
+          if @state == :zooming_out_fade
+            @target_tile_size = TILE_SIZE
+            set_camera(0, 0)
+            @state = :zooming_out_zoom
+          else
+            @target_tile_size = L_S_TILE_SIZE
+            set_camera((@cursor_pos[0] - 2) * L_S_TILE_SIZE, (@cursor_pos[1] - 1) * L_S_TILE_SIZE)
+            @state = :zooming_in_zoom
+          end
+          @timer = 0
+        end
+      when :zooming_out_zoom, :zooming_in_zoom
+        tile_size_delta = @target_tile_size - @tile_size
+        if tile_size_delta.abs < 0.1
+          @tile_size = @target_tile_size
+        else
+          @tile_size += (@target_tile_size - @tile_size) * @timer.to_f / ZOOM_DURATION
+        end
+        if @timer >= ZOOM_DURATION
+          @state = @state == :zooming_out_zoom ? :zoomed_out : :default
+        end
+      end
+
+      if KB.key_pressed?(Gosu::KB_Z) && @camera_target.nil?
+        if @state == :default
+          @state = :zooming_out_fade
+          @timer = 0
+        elsif @state == :zoomed_out
+          @state = :zooming_in_fade
+          @timer = 0
+        end
+      elsif KB.key_pressed?(Gosu::KB_RETURN) || KB.key_pressed?(Gosu::KB_SPACE)
+        @on_select.call(level_under_cursor.id) if @state == :default && level_under_cursor
       elsif KB.key_pressed?(Gosu::KB_UP) && @cursor_pos[1] > 0
         move_cursor(:up)
-      elsif KB.key_pressed?(Gosu::KB_RIGHT) && @cursor_pos[0] < L_S_TILES_X - 1
+      elsif KB.key_pressed?(Gosu::KB_RIGHT) && @cursor_pos[0] < TILES_X - 1
         move_cursor(:rt)
-      elsif KB.key_pressed?(Gosu::KB_DOWN) && @cursor_pos[1] < L_S_TILES_Y - 1
+      elsif KB.key_pressed?(Gosu::KB_DOWN) && @cursor_pos[1] < TILES_Y - 1
         move_cursor(:dn)
       elsif KB.key_pressed?(Gosu::KB_LEFT) && @cursor_pos[0] > 0
         move_cursor(:lf)
@@ -72,12 +111,12 @@ module LevelSelect
     end
 
     def draw
-      (1...L_S_TILES_X).each do |i|
-        x = i * L_S_TILE_SIZE - 1 - @map.cam.x
+      (1...TILES_X).each do |i|
+        x = i * @tile_size - 1 - @map.cam.x
         G.window.draw_rect(x, 0, 2, SCREEN_HEIGHT, GRID_COLOR, 0) if x >= -1 && x < SCREEN_WIDTH
       end
-      (1...L_S_TILES_Y).each do |i|
-        y = i * L_S_TILE_SIZE - 1 - @map.cam.y
+      (1...TILES_Y).each do |i|
+        y = i * @tile_size - 1 - @map.cam.y
         G.window.draw_rect(0, y, SCREEN_WIDTH, 2, GRID_COLOR, 0) if y >= -1 && y < SCREEN_HEIGHT
       end
       @thumbnails.each { |t| t.draw(@map) }
@@ -133,9 +172,13 @@ module LevelSelect
       return if x.zero? && y.zero?
 
       target_x = (@camera_target&.x || @map.cam.x) + x
-      target_x = [[target_x, 0].max, @map.instance_variable_get(:@max_x)].min
       target_y = (@camera_target&.y || @map.cam.y) + y
-      target_y = [[target_y, 0].max, @map.instance_variable_get(:@max_y)].min
+      set_camera(target_x, target_y)
+    end
+
+    def set_camera(x, y)
+      target_x = [[x, 0].max, @map.instance_variable_get(:@max_x)].min
+      target_y = [[y, 0].max, @map.instance_variable_get(:@max_y)].min
       return if target_x == @map.cam.x && target_y == @map.cam.y
 
       @camera_target = Vector.new(target_x, target_y)
