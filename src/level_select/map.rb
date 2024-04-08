@@ -4,9 +4,7 @@ require_relative 'character'
 module LevelSelect
   class Map
     CAM_SNAP_THRESHOLD = 2
-
-    FADE_DURATION = 30
-    ZOOM_DURATION = 90
+    INTERPOLATION_RATE = 0.2
 
     LEVELS_LAYOUT = [
       [2, 0],
@@ -29,6 +27,7 @@ module LevelSelect
       LEVELS_LAYOUT[0...last_level].each_with_index do |(i, j), index|
         add_thumbnail(index + 1, i, j, index + 1 < last_level)
       end
+      @thumbnails[0].on_fade_end = method(:on_fade_end)
 
       @cursor_pos = LEVELS_LAYOUT[0]
       @character = Character.new(@cursor_pos)
@@ -55,42 +54,28 @@ module LevelSelect
           @map.set_camera(@camera_target.x, @camera_target.y)
           @camera_target = nil
         else
-          @map.move_camera(delta_x * 0.2, delta_y * 0.2)
+          @map.move_camera(delta_x * INTERPOLATION_RATE, delta_y * INTERPOLATION_RATE)
         end
       end
 
-      @timer += 1 unless @state == :default || @state == :zoomed_out
-      case @state
-      when :zooming_out_fade, :zooming_in_fade
-        if @timer >= FADE_DURATION
-          if @state == :zooming_out_fade
-            @target_tile_size = TILE_SIZE
-            set_camera(0, 0)
-            @state = :zooming_out_zoom
-          else
-            @target_tile_size = L_S_TILE_SIZE
-            set_camera((@cursor_pos[0] - 2) * L_S_TILE_SIZE, (@cursor_pos[1] - 1) * L_S_TILE_SIZE)
-            @state = :zooming_in_zoom
-          end
-          @timer = 0
-        end
-      when :zooming_out_zoom, :zooming_in_zoom
-        tile_size_delta = @target_tile_size - @tile_size
-        if tile_size_delta.abs < 0.1
+      if @target_tile_size
+        delta = @target_tile_size - @tile_size
+        if delta.abs < 0.1
           @tile_size = @target_tile_size
-        else
-          @tile_size += (@target_tile_size - @tile_size) * @timer.to_f / ZOOM_DURATION
-        end
-        if @timer >= ZOOM_DURATION
+          @target_tile_size = nil
           @state = @state == :zooming_out_zoom ? :zoomed_out : :default
+        else
+          @tile_size += delta * INTERPOLATION_RATE
         end
       end
 
       if KB.key_pressed?(Gosu::KB_Z) && @camera_target.nil?
         if @state == :default
+          @thumbnails.each { |t| t.fade(:out) }
           @state = :zooming_out_fade
           @timer = 0
         elsif @state == :zoomed_out
+          @thumbnails.each { |t| t.fade(:in) }
           @state = :zooming_in_fade
           @timer = 0
         end
@@ -182,6 +167,18 @@ module LevelSelect
       return if target_x == @map.cam.x && target_y == @map.cam.y
 
       @camera_target = Vector.new(target_x, target_y)
+    end
+
+    def on_fade_end
+      if @state == :zooming_out_fade
+        @target_tile_size = TILE_SIZE
+        set_camera(0, 0)
+        @state = :zooming_out_zoom
+      else
+        @target_tile_size = L_S_TILE_SIZE
+        set_camera((@cursor_pos[0] - 2) * L_S_TILE_SIZE, (@cursor_pos[1] - 1) * L_S_TILE_SIZE)
+        @state = :zooming_in_zoom
+      end
     end
   end
 end

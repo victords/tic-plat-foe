@@ -243,7 +243,7 @@ class Level
     @character.draw
     @effects.each(&:draw)
 
-    Text.write("Level #{@id}", 10, 5, 0.75, DIM_TEXT_COLOR)
+    Text.write("Level #{@id}", 10, 5, 0.75, DEFAULT_TEXT_COLOR, 0x99)
     Text.write(@title, 10, 28)
 
     @pause_menu.draw
