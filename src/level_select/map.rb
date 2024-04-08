@@ -63,7 +63,12 @@ module LevelSelect
         if delta.abs < 0.1
           @tile_size = @target_tile_size
           @target_tile_size = nil
-          @state = @state == :zooming_out_zoom ? :zoomed_out : :default
+          if @state == :zooming_out_zoom
+            @state = :zoomed_out
+          else
+            @thumbnails.each { |t| t.fade(:in) }
+            @state = :default
+          end
         else
           @tile_size += delta * INTERPOLATION_RATE
         end
@@ -75,8 +80,9 @@ module LevelSelect
           @state = :zooming_out_fade
           @timer = 0
         elsif @state == :zoomed_out
-          @thumbnails.each { |t| t.fade(:in) }
-          @state = :zooming_in_fade
+          @target_tile_size = L_S_TILE_SIZE
+          set_camera((@cursor_pos[0] - 2) * L_S_TILE_SIZE, (@cursor_pos[1] - 1) * L_S_TILE_SIZE)
+          @state = :zooming_in_zoom
           @timer = 0
         end
       elsif KB.key_pressed?(Gosu::KB_RETURN) || KB.key_pressed?(Gosu::KB_SPACE)
@@ -170,15 +176,11 @@ module LevelSelect
     end
 
     def on_fade_end
-      if @state == :zooming_out_fade
-        @target_tile_size = TILE_SIZE
-        set_camera(0, 0)
-        @state = :zooming_out_zoom
-      else
-        @target_tile_size = L_S_TILE_SIZE
-        set_camera((@cursor_pos[0] - 2) * L_S_TILE_SIZE, (@cursor_pos[1] - 1) * L_S_TILE_SIZE)
-        @state = :zooming_in_zoom
-      end
+      return unless @state == :zooming_out_fade
+
+      @target_tile_size = TILE_SIZE
+      set_camera(0, 0)
+      @state = :zooming_out_zoom
     end
   end
 end

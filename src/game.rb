@@ -7,7 +7,7 @@ include MiniGL
 class Game
   class << self
     def init
-      @last_level = 1
+      @last_level = 6
       @level_select = LevelSelect::Map.new(@last_level)
       @level_select.on_select = method(:on_level_select)
     end
