@@ -4,7 +4,7 @@ require_relative 'character'
 module LevelSelect
   class Map
     CAM_SNAP_THRESHOLD = 2
-    INTERPOLATION_RATE = 0.2
+    ZOOMED_IN_TILE_SIZE = L_S_MAX_ZOOM * TILE_SIZE
 
     LEVELS_LAYOUT = [
       [2, 0],
@@ -20,7 +20,7 @@ module LevelSelect
     def initialize(last_level)
       @last_level = last_level
 
-      @map = MiniGL::Map.new(L_S_TILE_SIZE, L_S_TILE_SIZE, TILES_X, TILES_Y)
+      @map = MiniGL::Map.new(ZOOMED_IN_TILE_SIZE, ZOOMED_IN_TILE_SIZE, TILES_X, TILES_Y)
 
       @elements = Array.new(TILES_X) { Array.new(TILES_Y) }
       @thumbnails = []
@@ -33,7 +33,7 @@ module LevelSelect
       @character = Character.new(@cursor_pos)
       level_under_cursor&.select
 
-      @tile_size = L_S_TILE_SIZE
+      @zoom = L_S_MAX_ZOOM
       @state = :default
     end
 
@@ -58,11 +58,11 @@ module LevelSelect
         end
       end
 
-      if @target_tile_size
-        delta = @target_tile_size - @tile_size
-        if delta.abs < 0.1
-          @tile_size = @target_tile_size
-          @target_tile_size = nil
+      if @target_zoom
+        delta = @target_zoom - @zoom
+        if delta.abs < 0.01
+          @zoom = @target_zoom
+          @target_zoom = nil
           if @state == :zooming_out_zoom
             @state = :zoomed_out
           else
@@ -70,7 +70,7 @@ module LevelSelect
             @state = :default
           end
         else
-          @tile_size += delta * INTERPOLATION_RATE
+          @zoom += delta * INTERPOLATION_RATE
         end
       end
 
@@ -80,8 +80,8 @@ module LevelSelect
           @state = :zooming_out_fade
           @timer = 0
         elsif @state == :zoomed_out
-          @target_tile_size = L_S_TILE_SIZE
-          set_camera((@cursor_pos[0] - 2) * L_S_TILE_SIZE, (@cursor_pos[1] - 1) * L_S_TILE_SIZE)
+          @target_zoom = L_S_MAX_ZOOM
+          set_camera((@cursor_pos[0] - 2) * ZOOMED_IN_TILE_SIZE, (@cursor_pos[1] - 1) * ZOOMED_IN_TILE_SIZE)
           @state = :zooming_in_zoom
           @timer = 0
         end
@@ -103,15 +103,15 @@ module LevelSelect
 
     def draw
       (1...TILES_X).each do |i|
-        x = i * @tile_size - 1 - @map.cam.x
+        x = i * @zoom * TILE_SIZE - 1 - @map.cam.x
         G.window.draw_rect(x, 0, 2, SCREEN_HEIGHT, GRID_COLOR, 0) if x >= -1 && x < SCREEN_WIDTH
       end
       (1...TILES_Y).each do |i|
-        y = i * @tile_size - 1 - @map.cam.y
+        y = i * @zoom * TILE_SIZE - 1 - @map.cam.y
         G.window.draw_rect(0, y, SCREEN_WIDTH, 2, GRID_COLOR, 0) if y >= -1 && y < SCREEN_HEIGHT
       end
-      @thumbnails.each { |t| t.draw(@map) }
-      @character.draw(@map)
+      @thumbnails.each { |t| t.draw(@map, @zoom) }
+      @character.draw(@map, @zoom)
     end
 
     private
@@ -146,15 +146,15 @@ module LevelSelect
       screen_pos = @map.get_screen_pos(*@cursor_pos)
       move_x = 0
       move_y = 0
-      if screen_pos.x >= 4 * L_S_TILE_SIZE
-        move_x = 2 * L_S_TILE_SIZE
-      elsif screen_pos.x < L_S_TILE_SIZE
-        move_x = -2 * L_S_TILE_SIZE
+      if screen_pos.x >= 4 * ZOOMED_IN_TILE_SIZE
+        move_x = 2 * ZOOMED_IN_TILE_SIZE
+      elsif screen_pos.x < ZOOMED_IN_TILE_SIZE
+        move_x = -2 * ZOOMED_IN_TILE_SIZE
       end
-      if screen_pos.y >= 3 * L_S_TILE_SIZE
-        move_y = 2 * L_S_TILE_SIZE
-      elsif screen_pos.y < L_S_TILE_SIZE
-        move_y = -2 * L_S_TILE_SIZE
+      if screen_pos.y >= 3 * ZOOMED_IN_TILE_SIZE
+        move_y = 2 * ZOOMED_IN_TILE_SIZE
+      elsif screen_pos.y < ZOOMED_IN_TILE_SIZE
+        move_y = -2 * ZOOMED_IN_TILE_SIZE
       end
       move_camera(move_x, move_y)
     end
@@ -178,7 +178,7 @@ module LevelSelect
     def on_fade_end
       return unless @state == :zooming_out_fade
 
-      @target_tile_size = TILE_SIZE
+      @target_zoom = 1
       set_camera(0, 0)
       @state = :zooming_out_zoom
     end

@@ -7,8 +7,8 @@ module LevelSelect
     SCALE = 0.75
 
     def initialize(pos)
-      @x = (pos[0] + 1) * L_S_TILE_SIZE - 50
-      @y = pos[1] * L_S_TILE_SIZE + 7
+      @x = (pos[0] + 1) * TILE_SIZE - 12
+      @y = pos[1] * TILE_SIZE + 2
       @img = Res.img(:circle)
       @w = SCALE * @img.width
       @h = SCALE * @img.height
@@ -16,7 +16,7 @@ module LevelSelect
     end
 
     def move(x, y)
-      @target = Vector.new((@target&.x || @x) + x * L_S_TILE_SIZE, (@target&.y || @y) + y * L_S_TILE_SIZE)
+      @target = Vector.new((@target&.x || @x) + x * TILE_SIZE, (@target&.y || @y) + y * TILE_SIZE)
     end
 
     def update
@@ -28,16 +28,16 @@ module LevelSelect
           @y = @target.y
           @target = nil
         else
-          @x += delta_x * 0.2
-          @y += delta_y * 0.2
+          @x += delta_x * INTERPOLATION_RATE
+          @y += delta_y * INTERPOLATION_RATE
         end
       end
       animate
     end
 
-    def draw(map)
-      @img.draw(@x + SCALE * @offset_x - map.cam.x,
-                @y + SCALE * @offset_y - map.cam.y,
+    def draw(map, zoom)
+      @img.draw(zoom * (@x + SCALE * @offset_x) - map.cam.x,
+                zoom * (@y + SCALE * @offset_y) - map.cam.y,
                 0,
                 SCALE * @scale_x,
                 SCALE * @scale_y,

@@ -2,11 +2,12 @@ require_relative '../constants'
 
 module LevelSelect
   class Thumbnail
-    WIDTH = 120
-    HEIGHT = 90
+    ZOOMED_IN_WIDTH = 120
+    ZOOMED_IN_HEIGHT = 90
+    THUMB_OFFSET_X = (L_S_MAX_ZOOM * TILE_SIZE - ZOOMED_IN_WIDTH) / 2
     THUMB_OFFSET_Y = 50
-    T_TILE_SIZE = WIDTH / TILES_X
-    T_SCALE = WIDTH.to_f / SCREEN_WIDTH
+    T_TILE_SIZE = ZOOMED_IN_WIDTH / TILES_X
+    T_SCALE = ZOOMED_IN_WIDTH.to_f / SCREEN_WIDTH
     FADE_DURATION = 30
 
     attr_reader :id, :x, :y
@@ -14,8 +15,8 @@ module LevelSelect
 
     def initialize(id, col, row, passed)
       @id = id
-      @x = col * L_S_TILE_SIZE + (L_S_TILE_SIZE - WIDTH) / 2
-      @y = row * L_S_TILE_SIZE + THUMB_OFFSET_Y
+      @x = col * TILE_SIZE
+      @y = row * TILE_SIZE
       @passed = passed
       @blocks = []
       @passable_blocks = []
@@ -68,9 +69,8 @@ module LevelSelect
       end
 
       @selection = Particles.new(
-        source: self,
-        source_offset_x: WIDTH / 2,
-        source_offset_y: HEIGHT / 2,
+        x: L_S_MAX_ZOOM * (@x + TILE_SIZE / 2),
+        y: L_S_MAX_ZOOM * @y + THUMB_OFFSET_Y + ZOOMED_IN_HEIGHT / 2,
         img: Res.img(:levelThumb),
         scale_change: :grow,
         scale_min: 1,
@@ -116,52 +116,55 @@ module LevelSelect
       @selection.update
     end
 
-    def draw(map)
+    def draw(map, zoom)
       cam_x = map.cam.x
       cam_y = map.cam.y
       circle = Res.img(:circle)
 
       if @thumb_alpha > 0
-        Text.write("Level #{@id}", @x - cam_x, @y - THUMB_OFFSET_Y + 10 - cam_y, 1, DEFAULT_TEXT_COLOR, @thumb_alpha)
+        base_x = zoom * @x + THUMB_OFFSET_X
+        base_y = zoom * @y + THUMB_OFFSET_Y
+        Text.write("Level #{@id}", base_x - cam_x, base_y - THUMB_OFFSET_Y + 10 - cam_y, 1, DEFAULT_TEXT_COLOR, @thumb_alpha)
 
         grid_color = ((0.2 * @thumb_alpha).round << 24) | (GRID_COLOR & 0xffffff)
         (1...TILES_X).each do |i|
-          G.window.draw_rect(@x + i * T_TILE_SIZE - cam_x, @y - cam_y, 1, HEIGHT, grid_color, 0)
+          G.window.draw_rect(base_x + i * T_TILE_SIZE - cam_x, base_y - cam_y, 1, ZOOMED_IN_HEIGHT, grid_color, 0)
         end
         (1...TILES_Y).each do |j|
-          G.window.draw_rect(@x - cam_x, @y + j * T_TILE_SIZE - cam_y, WIDTH, 1, grid_color, 0)
+          G.window.draw_rect(base_x - cam_x, base_y + j * T_TILE_SIZE - cam_y, ZOOMED_IN_WIDTH, 1, grid_color, 0)
         end
 
         wall_color = (@thumb_alpha << 24) | (WALL_COLOR & 0xffffff)
         @drawable_walls.each do |(x, y, rt)|
           if rt
-            G.window.draw_rect(@x + x + T_TILE_SIZE - cam_x, @y + y - cam_y, 1, T_TILE_SIZE, wall_color, 0)
+            G.window.draw_rect(base_x + x + T_TILE_SIZE - cam_x, base_y + y - cam_y, 1, T_TILE_SIZE, wall_color, 0)
           else
-            G.window.draw_rect(@x + x - cam_x, @y + y + T_TILE_SIZE - cam_y, T_TILE_SIZE, 1, wall_color, 0)
+            G.window.draw_rect(base_x + x - cam_x, base_y + y + T_TILE_SIZE - cam_y, T_TILE_SIZE, 1, wall_color, 0)
           end
         end
         @passable_blocks.each do |(i, j)|
-          G.window.draw_rect(@x + i * T_TILE_SIZE + 1 - cam_x, @y + j * T_TILE_SIZE - cam_y, T_TILE_SIZE - 2, 1, wall_color, 0)
+          G.window.draw_rect(base_x + i * T_TILE_SIZE + 1 - cam_x, base_y + j * T_TILE_SIZE - cam_y, T_TILE_SIZE - 2, 1, wall_color, 0)
         end
 
         @marks.each do |(i, j, type)|
           color = (@thumb_alpha << 24) | MARK_COLOR[type]
-          Res.img(type).draw(@x + i * T_TILE_SIZE - cam_x, @y + j * T_TILE_SIZE - cam_y, 0, T_SCALE, T_SCALE, color)
+          Res.img(type).draw(base_x + i * T_TILE_SIZE - cam_x, base_y + j * T_TILE_SIZE - cam_y, 0, T_SCALE, T_SCALE, color)
         end
 
-        circle.draw(@x + @start_point[0] * T_TILE_SIZE - cam_x,
-                    @y + @start_point[1] * T_TILE_SIZE - cam_y,
+        circle.draw(base_x + @start_point[0] * T_TILE_SIZE - cam_x,
+                    base_y + @start_point[1] * T_TILE_SIZE - cam_y,
                     0, T_SCALE, T_SCALE, (@thumb_alpha << 24) | 0xffffff)
       end
 
       if @abbrev_alpha > 0
-        Text.write_center("L#{@id}", @x + WIDTH / 2 - cam_x, @y + HEIGHT / 2 - cam_y, 4, DEFAULT_TEXT_COLOR, @abbrev_alpha)
+        Text.write_center("L#{@id}", zoom * (@x + TILE_SIZE / 2 - cam_x), zoom * (@y + TILE_SIZE / 2 - cam_y), 2, DEFAULT_TEXT_COLOR, @abbrev_alpha)
       end
 
       if @passed
-        circle.draw(@x + (WIDTH - 2 * circle.width) / 2 - cam_x,
-                    @y + (HEIGHT - 2 * circle.height) / 2 - cam_y,
-                    0, 2, 2, (0x66 << 24) | MARK_COLOR[:circle])
+        scale = 1 + (zoom / L_S_MAX_ZOOM)
+        circle.draw(zoom * (@x + (TILE_SIZE - scale.to_f / zoom * circle.width) / 2) - cam_x,
+                    zoom * (@y + (TILE_SIZE - scale.to_f / zoom * circle.height) / 2) - cam_y,
+                    0, scale, scale, (0x66 << 24) | MARK_COLOR[:circle])
       end
 
       @selection.draw(map)

@@ -17,4 +17,5 @@ MARK_COLOR = {
   square: 0xffffff,
 }.freeze
 DEFAULT_TEXT_COLOR = 0xffffff
-L_S_TILE_SIZE = 160
+L_S_MAX_ZOOM = 4
+INTERPOLATION_RATE = 0.2
