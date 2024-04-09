@@ -6,6 +6,7 @@ module LevelSelect
 
     SCALE = 0.75
     FADE_DURATION = 30
+    MOVE_INTERPOLATION_RATE = 0.2
 
     attr_writer :on_fade_end
 
@@ -56,8 +57,8 @@ module LevelSelect
           @y = @target.y
           @target = nil
         else
-          @x += delta_x * INTERPOLATION_RATE
-          @y += delta_y * INTERPOLATION_RATE
+          @x += delta_x * MOVE_INTERPOLATION_RATE
+          @y += delta_y * MOVE_INTERPOLATION_RATE
         end
       end
       animate

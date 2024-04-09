@@ -3,8 +3,9 @@ require_relative 'character'
 
 module LevelSelect
   class Map
-    CAM_SNAP_THRESHOLD = 2
     ZOOMED_IN_TILE_SIZE = L_S_MAX_ZOOM * TILE_SIZE
+    CAM_INTERPOLATION_RATE = 0.2
+    ZOOM_INTERPOLATION_RATE = 0.1
 
     LEVELS_LAYOUT = [
       [2, 0],
@@ -21,6 +22,9 @@ module LevelSelect
       @last_level = last_level
 
       @map = MiniGL::Map.new(ZOOMED_IN_TILE_SIZE, ZOOMED_IN_TILE_SIZE, TILES_X, TILES_Y)
+      # floats to allow smooth interpolation
+      @camera_x = @map.cam.x
+      @camera_y = @map.cam.y
 
       @elements = Array.new(TILES_X) { Array.new(TILES_Y) }
       @thumbnails = []
@@ -49,13 +53,15 @@ module LevelSelect
 
     def update
       if @camera_target
-        delta_x = @camera_target.x - @map.cam.x
-        delta_y = @camera_target.y - @map.cam.y
-        if delta_x.abs <= CAM_SNAP_THRESHOLD && delta_y.abs <= CAM_SNAP_THRESHOLD
-          @map.set_camera(@camera_target.x, @camera_target.y)
+        delta_x = @camera_target.x - @camera_x
+        delta_y = @camera_target.y - @camera_y
+        if delta_x.abs <= 0.1 && delta_y.abs <= 0.1
+          @map.set_camera(@camera_x = @camera_target.x, @camera_y = @camera_target.y)
           @camera_target = nil
         else
-          @map.move_camera(delta_x * INTERPOLATION_RATE, delta_y * INTERPOLATION_RATE)
+          @camera_x += delta_x * CAM_INTERPOLATION_RATE
+          @camera_y += delta_y * CAM_INTERPOLATION_RATE
+          @map.set_camera(@camera_x.round, @camera_y.round)
         end
       end
 
@@ -73,29 +79,31 @@ module LevelSelect
             @state = :default
           end
         else
-          @zoom += delta * INTERPOLATION_RATE
+          @zoom += delta * ZOOM_INTERPOLATION_RATE
         end
       end
 
-      if KB.key_pressed?(Gosu::KB_Z) && @camera_target.nil?
-        if @state == :default
-          @thumbnails.each { |t| t.fade(:out) }
-          @character.fade(:out)
-          @state = :zooming_out_fade
-        elsif @state == :zoomed_out
-          @character.fade(:out)
-          @state = :zooming_in_fade
+      if @state == :default || @state == :zoomed_out
+        if KB.key_pressed?(Gosu::KB_Z) && @camera_target.nil?
+          if @state == :default
+            @thumbnails.each { |t| t.fade(:out) }
+            @character.fade(:out)
+            @state = :zooming_out_fade
+          elsif @state == :zoomed_out
+            @character.fade(:out)
+            @state = :zooming_in_fade
+          end
+        elsif KB.key_pressed?(Gosu::KB_RETURN) || KB.key_pressed?(Gosu::KB_SPACE)
+          @on_select.call(level_under_cursor.id) if @state == :default && level_under_cursor
+        elsif KB.key_pressed?(Gosu::KB_UP) && @cursor_pos[1] > 0
+          move_cursor(:up)
+        elsif KB.key_pressed?(Gosu::KB_RIGHT) && @cursor_pos[0] < TILES_X - 1
+          move_cursor(:rt)
+        elsif KB.key_pressed?(Gosu::KB_DOWN) && @cursor_pos[1] < TILES_Y - 1
+          move_cursor(:dn)
+        elsif KB.key_pressed?(Gosu::KB_LEFT) && @cursor_pos[0] > 0
+          move_cursor(:lf)
         end
-      elsif KB.key_pressed?(Gosu::KB_RETURN) || KB.key_pressed?(Gosu::KB_SPACE)
-        @on_select.call(level_under_cursor.id) if @state == :default && level_under_cursor
-      elsif KB.key_pressed?(Gosu::KB_UP) && @cursor_pos[1] > 0
-        move_cursor(:up)
-      elsif KB.key_pressed?(Gosu::KB_RIGHT) && @cursor_pos[0] < TILES_X - 1
-        move_cursor(:rt)
-      elsif KB.key_pressed?(Gosu::KB_DOWN) && @cursor_pos[1] < TILES_Y - 1
-        move_cursor(:dn)
-      elsif KB.key_pressed?(Gosu::KB_LEFT) && @cursor_pos[0] > 0
-        move_cursor(:lf)
       end
 
       @thumbnails.each(&:update)
