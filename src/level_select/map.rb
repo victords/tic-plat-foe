@@ -27,10 +27,11 @@ module LevelSelect
       LEVELS_LAYOUT[0...last_level].each_with_index do |(i, j), index|
         add_thumbnail(index + 1, i, j, index + 1 < last_level)
       end
-      @thumbnails[0].on_fade_end = method(:on_fade_end)
+      @thumbnails[0].on_fade_end = method(:on_thumbnail_fade_end)
 
       @cursor_pos = LEVELS_LAYOUT[0]
-      @character = Character.new(@cursor_pos)
+      @character = Character.new(*@cursor_pos)
+      @character.on_fade_end = method(:on_character_fade_end)
       level_under_cursor&.select
 
       @zoom = L_S_MAX_ZOOM
@@ -64,9 +65,11 @@ module LevelSelect
           @zoom = @target_zoom
           @target_zoom = nil
           if @state == :zooming_out_zoom
+            @character.fade(:in)
             @state = :zoomed_out
           else
             @thumbnails.each { |t| t.fade(:in) }
+            @character.fade(:in)
             @state = :default
           end
         else
@@ -77,13 +80,11 @@ module LevelSelect
       if KB.key_pressed?(Gosu::KB_Z) && @camera_target.nil?
         if @state == :default
           @thumbnails.each { |t| t.fade(:out) }
+          @character.fade(:out)
           @state = :zooming_out_fade
-          @timer = 0
         elsif @state == :zoomed_out
-          @target_zoom = L_S_MAX_ZOOM
-          set_camera((@cursor_pos[0] - 2) * ZOOMED_IN_TILE_SIZE, (@cursor_pos[1] - 1) * ZOOMED_IN_TILE_SIZE)
-          @state = :zooming_in_zoom
-          @timer = 0
+          @character.fade(:out)
+          @state = :zooming_in_fade
         end
       elsif KB.key_pressed?(Gosu::KB_RETURN) || KB.key_pressed?(Gosu::KB_SPACE)
         @on_select.call(level_under_cursor.id) if @state == :default && level_under_cursor
@@ -175,12 +176,23 @@ module LevelSelect
       @camera_target = Vector.new(target_x, target_y)
     end
 
-    def on_fade_end
+    def on_thumbnail_fade_end
       return unless @state == :zooming_out_fade
 
       @target_zoom = 1
       set_camera(0, 0)
       @state = :zooming_out_zoom
+    end
+
+    def on_character_fade_end
+      if @state == :zooming_in_fade
+        @target_zoom = L_S_MAX_ZOOM
+        set_camera((@cursor_pos[0] - 2) * ZOOMED_IN_TILE_SIZE, (@cursor_pos[1] - 1) * ZOOMED_IN_TILE_SIZE)
+        @character.move_to_zoomed_in(*@cursor_pos)
+        @state = :zooming_in_zoom
+      else
+        @character.move_to_zoomed_out(*@cursor_pos)
+      end
     end
   end
 end
