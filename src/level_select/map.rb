@@ -8,12 +8,12 @@ module LevelSelect
     ZOOM_INTERPOLATION_RATE = 0.1
 
     LEVELS_LAYOUT = [
-      [2, 0],
-      [2, 2],
-      [4, 2],
-      [6, 2],
-      [6, 4],
-      [6, 7],
+      [2, 1],
+      [2, 3],
+      [4, 3],
+      [6, 3],
+      [6, 5],
+      [6, 8],
     ].freeze
 
     attr_writer :on_select
@@ -86,6 +86,7 @@ module LevelSelect
       if @state == :default || @state == :zoomed_out
         if KB.key_pressed?(Gosu::KB_Z) && @camera_target.nil?
           if @state == :default
+            level_under_cursor&.deselect
             @thumbnails.each { |t| t.fade(:out) }
             @character.fade(:out)
             @state = :zooming_out_fade
@@ -135,7 +136,7 @@ module LevelSelect
     end
 
     def move_cursor(dir)
-      level_under_cursor&.deselect
+      level_under_cursor&.deselect if @state == :default
       case dir
       when :up
         @cursor_pos[1] -= 1
@@ -150,7 +151,8 @@ module LevelSelect
         @cursor_pos[0] -= 1
         @character.move(-1, 0)
       end
-      level_under_cursor&.select
+      level_under_cursor&.select if @state == :default
+      return unless @state == :default
 
       screen_pos = @map.get_screen_pos(*@cursor_pos)
       move_x = 0
@@ -185,11 +187,13 @@ module LevelSelect
     end
 
     def on_thumbnail_fade_end
-      return unless @state == :zooming_out_fade
-
-      @target_zoom = 1
-      set_camera(0, 0)
-      @state = :zooming_out_zoom
+      if @state == :zooming_out_fade
+        @target_zoom = 1
+        set_camera(0, 0)
+        @state = :zooming_out_zoom
+      else
+        level_under_cursor&.select
+      end
     end
 
     def on_character_fade_end
@@ -199,6 +203,7 @@ module LevelSelect
         @character.move_to_zoomed_in(*@cursor_pos)
         @state = :zooming_in_zoom
       else
+        @cursor_pos[1] -= 1 if level_under_cursor
         @character.move_to_zoomed_out(*@cursor_pos)
       end
     end

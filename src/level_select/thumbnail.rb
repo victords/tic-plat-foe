@@ -157,11 +157,11 @@ module LevelSelect
       end
 
       if @abbrev_alpha > 0
-        Text.write_center("L#{@id}", zoom * (@x + TILE_SIZE / 2 - cam_x), zoom * (@y + TILE_SIZE / 2 - cam_y), 2, DEFAULT_TEXT_COLOR, @abbrev_alpha)
+        Text.write_center("L#{@id}", zoom * (@x + TILE_SIZE / 2) - cam_x, zoom * (@y + TILE_SIZE / 2) - cam_y, 2, DEFAULT_TEXT_COLOR, @abbrev_alpha)
       end
 
       if @passed
-        scale = 1 + (zoom / L_S_MAX_ZOOM)
+        scale = 1 + ((zoom - 1) / (L_S_MAX_ZOOM - 1))
         circle.draw(zoom * (@x + (TILE_SIZE - scale.to_f / zoom * circle.width) / 2) - cam_x,
                     zoom * (@y + (TILE_SIZE - scale.to_f / zoom * circle.height) / 2) - cam_y,
                     0, scale, scale, (0x66 << 24) | MARK_COLOR[:circle])
