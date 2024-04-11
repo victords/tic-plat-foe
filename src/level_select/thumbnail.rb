@@ -161,10 +161,12 @@ module LevelSelect
       end
 
       if @passed
-        scale = 1 + ((zoom - 1) / (L_S_MAX_ZOOM - 1))
+        rate = (zoom - 1) / (L_S_MAX_ZOOM - 1)
+        scale = 1 + rate
+        alpha = 204 - (rate * 102).round
         circle.draw(zoom * (@x + (TILE_SIZE - scale.to_f / zoom * circle.width) / 2) - cam_x,
                     zoom * (@y + (TILE_SIZE - scale.to_f / zoom * circle.height) / 2) - cam_y,
-                    0, scale, scale, (0x66 << 24) | MARK_COLOR[:circle])
+                    0, scale, scale, (alpha << 24) | MARK_COLOR[:circle])
       end
 
       @selection.draw(map)
