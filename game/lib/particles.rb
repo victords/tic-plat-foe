@@ -1,6 +1,9 @@
 class Particles
+  SUPPORTED_SHAPES = %i[square]
+
   def initialize(**options)
     raise "Particles must have either a shape or an image!" if options[:shape].nil? && options[:img].nil?
+    raise "Unsupported shape '#{options[:shape]}'" if options[:shape] && !SUPPORTED_SHAPES.include?(options[:shape])
 
     @options = DEFAULT_OPTIONS.merge(options)
     @x = (@options[:source]&.x || @options[:x]) + @options[:source_offset_x]
@@ -222,14 +225,6 @@ class Particles
         case @shape
         when :square
           Window.draw_rect(@x - @scale * 0.5, @y - @scale * 0.5, @scale, @scale, color, z_index)
-        when :triangle_up
-          Window.draw_triangle(@x - @scale * 0.5, @y + @scale * 0.433, color,
-                               @x + @scale * 0.5, @y + @scale * 0.433, color,
-                               @x, @y - @scale * 0.433, color, z_index)
-        when :triangle_down
-          Window.draw_triangle(@x - @scale * 0.5, @y - @scale * 0.433, color,
-                               @x + @scale * 0.5, @y - @scale * 0.433, color,
-                               @x, @y + @scale * 0.433, color, z_index)
         end
       end
     end
