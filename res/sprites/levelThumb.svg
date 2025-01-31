@@ -2,14 +2,14 @@
 <!-- Created with Inkscape (http://www.inkscape.org/) -->
 
 <svg
-   width="124"
-   height="94"
-   viewBox="0 0 32.808333 24.870834"
+   width="132"
+   height="76"
+   viewBox="0 0 34.925 20.108334"
    version="1.1"
    id="svg8"
    inkscape:version="1.1.2 (0a00cf5339, 2022-02-04)"
    sodipodi:docname="levelThumb.svg"
-   inkscape:export-filename="/home/victor/Projects/tic-plat-foe/data/img/levelThumb.png"
+   inkscape:export-filename="/home/victor/Projects/tic-plat-foe/game/sprites/levelThumb.png"
    inkscape:export-xdpi="96"
    inkscape:export-ydpi="96"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
@@ -28,9 +28,9 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="3.959798"
-     inkscape:cx="53.916892"
-     inkscape:cy="42.678945"
+     inkscape:zoom="8.3712121"
+     inkscape:cx="66"
+     inkscape:cy="31.058824"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="false"
@@ -62,8 +62,7 @@
      transform="translate(0,-263.13332)">
     <path
        id="rect844"
-       style="opacity:1;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:3.99999;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;paint-order:normal"
-       d="M 0 0 L 0 94 L 124 94 L 124 0 L 0 0 z M 2 2 L 122 2 L 122 92 L 2 92 L 2 2 z "
-       transform="matrix(0.26458334,0,0,0.26458334,0,263.13332)" />
+       style="opacity:1;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:1.05833;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;paint-order:normal"
+       d="m 0,263.13332 v 20.10833 h 34.925001 v -20.10833 z m 0.56330646,0.42784 H 34.361694 v 19.25266 H 0.56330646 Z" />
   </g>
 </svg>

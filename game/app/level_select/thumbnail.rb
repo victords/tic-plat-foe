@@ -2,10 +2,10 @@ require 'app/constants'
 
 module LevelSelect
   class Thumbnail
-    ZOOMED_IN_WIDTH = 120
-    ZOOMED_IN_HEIGHT = 90
+    ZOOMED_IN_WIDTH = 128
+    ZOOMED_IN_HEIGHT = 72
     THUMB_OFFSET_X = (L_S_MAX_ZOOM * TILE_SIZE - ZOOMED_IN_WIDTH) / 2
-    THUMB_OFFSET_Y = 50
+    THUMB_OFFSET_Y = 64
     T_TILE_SIZE = ZOOMED_IN_WIDTH / TILES_X
     T_SCALE = ZOOMED_IN_WIDTH.to_f / SCREEN_WIDTH
     FADE_DURATION = 30
@@ -123,7 +123,7 @@ module LevelSelect
       if @thumb_alpha > 0
         base_x = zoom * @x + THUMB_OFFSET_X
         base_y = zoom * @y + THUMB_OFFSET_Y
-        Text.write("Level #{@id}", base_x - cam_x, base_y - THUMB_OFFSET_Y + 10 - cam_y, 1, DEFAULT_TEXT_COLOR, @thumb_alpha)
+        Text.write("Level #{@id}", base_x - cam_x, base_y - 40 - cam_y, 1, DEFAULT_TEXT_COLOR, @thumb_alpha)
 
         grid_color = ((0.2 * @thumb_alpha).round << 24) | (GRID_COLOR & 0xffffff)
         (1...TILES_X).each do |i|

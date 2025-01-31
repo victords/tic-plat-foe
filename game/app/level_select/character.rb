@@ -25,7 +25,7 @@ module LevelSelect
 
     def move_to_zoomed_in(col, row)
       @x = (col + 1) * TILE_SIZE - 12
-      @y = row * TILE_SIZE + 2
+      @y = row * TILE_SIZE + 4
     end
 
     def move_to_zoomed_out(col, row)
