@@ -1,4 +1,4 @@
-require_relative '../constants'
+require 'app/constants'
 
 module LevelSelect
   class Character
@@ -12,7 +12,7 @@ module LevelSelect
 
     def initialize(col, row)
       move_to_zoomed_in(col, row)
-      @img = Res.img(:circle)
+      @img = Image.new(:circle)
       @w = SCALE * @img.width
       @h = SCALE * @img.height
       @alpha = 255
@@ -65,13 +65,11 @@ module LevelSelect
     end
 
     def draw(map, zoom)
-      color = (@alpha << 24) | 0xffffff
       @img.draw(zoom * @x + SCALE * @offset_x - map.cam.x,
                 zoom * @y + SCALE * @offset_y - map.cam.y,
-                0,
-                SCALE * @scale_x,
-                SCALE * @scale_y,
-                color)
+                scale_x: SCALE * @scale_x,
+                scale_y: SCALE * @scale_y,
+                color: (@alpha << 24) | 0xffffff)
     end
   end
 end

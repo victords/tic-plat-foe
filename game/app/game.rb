@@ -1,8 +1,6 @@
-require_relative 'level'
-require_relative 'level_select/map'
-require_relative 'effect/transition'
-
-include MiniGL
+require 'app/level'
+require 'app/level_select/map'
+require 'app/effect/transition'
 
 class Game
   class << self
@@ -46,6 +44,7 @@ class Game
     end
 
     def update
+      KB.update
       if @transition
         @transition.update
         @transition = nil if @transition.dead

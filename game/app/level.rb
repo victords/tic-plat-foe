@@ -1,9 +1,7 @@
-require_relative 'character'
-require_relative 'mark'
-require_relative 'effect/tile_highlight_effect'
-require_relative 'effect/level_end_effect'
-
-include MiniGL
+require 'app/character'
+require 'app/mark'
+require 'app/effect/tile_highlight_effect'
+require 'app/effect/level_end_effect'
 
 class Level
   attr_reader :marks
@@ -21,8 +19,7 @@ class Level
     @effects = []
     @character = Character.new
 
-    File.open("#{Res.prefix}level/#{id}") do |f|
-      contents = f.read
+    $gtk.read_file("data/level/#{id}").tap do |contents|
       first_line_break = contents.index("\n")
       @title = contents[0...first_line_break]
 
@@ -68,25 +65,25 @@ class Level
       @drawable_walls << [x, y, false] if dn
     end
 
-    @pause_menu = Panel.new(0, 0, 350, 250, [
-      Button.new(x: 0, y: -50, font: Text.font, text: "Resume", text_color: DEFAULT_TEXT_COLOR, width: 250, height: 40, anchor: :center) do
+    @pause_menu = Panel.new(0, 0, 350, 250, components: [
+      Button.new(0, -50, font: Text.font, text: "Resume", text_color: DEFAULT_TEXT_COLOR, width: 250, height: 40, anchor: :center) do
         @pause_menu.visible = false
       end,
-      Button.new(x: 0, y: 0, font: Text.font, text: "Back to level selection", text_color: DEFAULT_TEXT_COLOR, width: 250, height: 40, anchor: :center) do
+      Button.new(0, 0, font: Text.font, text: "Back to level selection", text_color: DEFAULT_TEXT_COLOR, width: 250, height: 40, anchor: :center) do
         Game.back_to_level_select
       end,
-      Button.new(x: 0, y: 50, font: Text.font, text: "Back to main menu", text_color: DEFAULT_TEXT_COLOR, width: 250, height: 40, anchor: :center) do
-        G.window.close # TODO
+      Button.new(0, 50, font: Text.font, text: "Back to main menu", text_color: DEFAULT_TEXT_COLOR, width: 250, height: 40, anchor: :center) do
+        Window.close # TODO
       end,
-    ], :panel, :tiled, nil, 1, 1, :center)
+    ], img_path: :panel, img_mode: :tiled, scale_x: 1, scale_y: 1, anchor: :center)
     @pause_menu.visible = false
     @pause_menu_button_index = 0
-    @pause_menu_selection = @pause_menu.controls.map do |btn|
+    @pause_menu_selection = @pause_menu.components.map do |btn|
       Particles.new(
         source: btn,
         source_offset_x: btn.w / 2,
         source_offset_y: btn.h / 2,
-        img: Res.img(:btnHighlight),
+        img: Image.new(:btnHighlight),
         scale_change: :grow,
         scale_min: 1,
         scale_max: 1.2,
@@ -171,7 +168,7 @@ class Level
 
   def update
     unless @finished || @pause_menu.visible
-      reset if KB.key_pressed?(Gosu::KB_R)
+      reset if KB.key_pressed?(:r)
 
       @character.update(self)
 
@@ -192,19 +189,19 @@ class Level
     end
     return if finished
 
-    @pause_menu.visible = !@pause_menu.visible if KB.key_pressed?(Gosu::KB_ESCAPE)
+    @pause_menu.visible = !@pause_menu.visible if KB.key_pressed?(:escape)
     if @pause_menu.visible
-      if KB.key_pressed?(Gosu::KB_RETURN) || KB.key_pressed?(Gosu::KB_SPACE)
-        @pause_menu.controls[@pause_menu_button_index].click
-      elsif KB.key_pressed?(Gosu::KB_UP)
+      if KB.key_pressed?(:enter) || KB.key_pressed?(:space)
+        @pause_menu.components[@pause_menu_button_index].click
+      elsif KB.key_pressed?(:up_arrow)
         @pause_menu_selection[@pause_menu_button_index].stop
         @pause_menu_button_index -= 1
-        @pause_menu_button_index = @pause_menu.controls.size - 1 if @pause_menu_button_index < 0
+        @pause_menu_button_index = @pause_menu.components.size - 1 if @pause_menu_button_index < 0
         @pause_menu_selection[@pause_menu_button_index].start
-      elsif KB.key_pressed?(Gosu::KB_DOWN)
+      elsif KB.key_pressed?(:down_arrow)
         @pause_menu_selection[@pause_menu_button_index].stop
         @pause_menu_button_index += 1
-        @pause_menu_button_index = 0 if @pause_menu_button_index >= @pause_menu.controls.size
+        @pause_menu_button_index = 0 if @pause_menu_button_index >= @pause_menu.components.size
         @pause_menu_selection[@pause_menu_button_index].start
       end
 
@@ -222,22 +219,22 @@ class Level
 
   def draw
     (1...@map.size.x).each do |i|
-      G.window.draw_rect(i * TILE_SIZE - 1, 0, 2, SCREEN_HEIGHT, GRID_COLOR, 0)
+      Window.draw_rect(i * TILE_SIZE - 1, 0, 2, SCREEN_HEIGHT, GRID_COLOR, 0)
     end
     (1...@map.size.y).each do |j|
-      G.window.draw_rect(0, j * TILE_SIZE - 1, SCREEN_WIDTH, 2, GRID_COLOR, 0)
+      Window.draw_rect(0, j * TILE_SIZE - 1, SCREEN_WIDTH, 2, GRID_COLOR, 0)
     end
 
     @drawable_walls.each do |(x, y, rt)|
       if rt
-        G.window.draw_rect(x + TILE_SIZE - 1, y, 2, TILE_SIZE, WALL_COLOR, 0)
+        Window.draw_rect(x + TILE_SIZE - 1, y, 2, TILE_SIZE, WALL_COLOR, 0)
       else
-        G.window.draw_rect(x, y + TILE_SIZE - 1, TILE_SIZE, 2, WALL_COLOR, 0)
+        Window.draw_rect(x, y + TILE_SIZE - 1, TILE_SIZE, 2, WALL_COLOR, 0)
       end
     end
 
     @passable_blocks.each do |b|
-      G.window.draw_rect(b.x + 4, b.y - 1, TILE_SIZE - 8, 2, WALL_COLOR, 0)
+      Window.draw_rect(b.x + 4, b.y - 1, TILE_SIZE - 8, 2, WALL_COLOR, 0)
     end
     @marks.each(&:draw)
     @character.draw

@@ -1,7 +1,5 @@
-require_relative 'constants'
-require_relative 'pusher'
-
-include MiniGL
+require 'app/constants'
+require 'app/pusher'
 
 class Mark < GameObject
   include Pusher
@@ -12,7 +10,7 @@ class Mark < GameObject
   attr_reader :type, :tile
 
   def initialize(type, i, j)
-    super(i * TILE_SIZE + 1, j * TILE_SIZE, TILE_SIZE - 2, TILE_SIZE, type, Vector.new(-1, 0))
+    super(i * TILE_SIZE + 1, j * TILE_SIZE, TILE_SIZE - 2, TILE_SIZE, type, img_gap: Vector.new(-1, 0))
     @start_x = @x
     @start_y = @y
     @type = type
@@ -47,13 +45,13 @@ class Mark < GameObject
             else
               255
             end
-    super(nil, 1, 1, alpha, @color)
+    super(alpha: alpha, color: @color)
   end
 
   private
 
   def calculate_tile
-    row = @y.to_i / TILE_SIZE
+    row = @y.to_i.idiv(TILE_SIZE)
     delta_y = @y - row * TILE_SIZE
     if delta_y >= TILE_SIZE - ROW_THRESHOLD
       row += 1
@@ -61,7 +59,7 @@ class Mark < GameObject
       return nil
     end
 
-    column = @x.to_i / TILE_SIZE
+    column = @x.to_i.idiv(TILE_SIZE)
     delta_x = @x - column.to_i * TILE_SIZE
     if delta_x >= TILE_SIZE - COLUMN_THRESHOLD
       column += 1

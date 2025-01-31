@@ -1,4 +1,4 @@
-require_relative '../constants'
+require 'app/constants'
 
 class TileHighlightEffect
   INTERVAL = 300
@@ -12,7 +12,7 @@ class TileHighlightEffect
     @alpha = 0
   end
 
-  def dead = false
+  def dead; false; end
 
   def update
     @timer += 1
@@ -25,6 +25,6 @@ class TileHighlightEffect
 
   def draw
     color = (@alpha << 24) | COLOR
-    G.window.draw_rect(@x, @y, TILE_SIZE - 2, TILE_SIZE - 2, color, -1)
+    Window.draw_rect(@x, @y, TILE_SIZE - 2, TILE_SIZE - 2, color, -1)
   end
 end

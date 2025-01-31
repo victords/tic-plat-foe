@@ -1,12 +1,12 @@
-require_relative '../constants'
+require 'app/constants'
 
 class JumpEffect
   attr_reader :dead
 
   def initialize(x, y)
     particle_options = {
-      x:,
-      y:,
+      x: x,
+      y: y,
       shape: :square,
       scale: 5,
       emission_interval: 60,

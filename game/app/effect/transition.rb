@@ -1,4 +1,4 @@
-require_relative '../constants'
+require 'app/constants'
 
 class Transition
   SCALE_DURATION = 15
@@ -35,7 +35,7 @@ class Transition
         scale = [frame.to_f / SCALE_DURATION, 1].min
         scale = 1 - scale if @timer >= STEP_DURATION
         size = TILE_SIZE * scale
-        G.window.draw_rect(i * TILE_SIZE + (TILE_SIZE - size) / 2, j * TILE_SIZE + (TILE_SIZE - size) / 2, size, size, COLOR, 1000)
+        Window.draw_rect(i * TILE_SIZE + (TILE_SIZE - size) / 2, j * TILE_SIZE + (TILE_SIZE - size) / 2, size, size, COLOR, 1000)
       end
     end
   end

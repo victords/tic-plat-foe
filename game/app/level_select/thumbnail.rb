@@ -1,4 +1,4 @@
-require_relative '../constants'
+require 'app/constants'
 
 module LevelSelect
   class Thumbnail
@@ -22,8 +22,7 @@ module LevelSelect
       @passable_blocks = []
       @marks = []
 
-      File.open("#{Res.prefix}level/#{id}") do |f|
-        contents = f.read
+      $gtk.read_file("data/level/#{id}").tap do |contents|
         first_line_break = contents.index("\n")
         @title = contents[0...first_line_break]
 
@@ -71,7 +70,7 @@ module LevelSelect
       @selection = Particles.new(
         x: L_S_MAX_ZOOM * (@x + TILE_SIZE / 2),
         y: L_S_MAX_ZOOM * @y + THUMB_OFFSET_Y + ZOOMED_IN_HEIGHT / 2,
-        img: Res.img(:levelThumb),
+        img: Image.new(:levelThumb),
         scale_change: :grow,
         scale_min: 1,
         scale_max: 1.2,
@@ -119,7 +118,7 @@ module LevelSelect
     def draw(map, zoom)
       cam_x = map.cam.x
       cam_y = map.cam.y
-      circle = Res.img(:circle)
+      circle = Image.new(:circle)
 
       if @thumb_alpha > 0
         base_x = zoom * @x + THUMB_OFFSET_X
@@ -128,32 +127,32 @@ module LevelSelect
 
         grid_color = ((0.2 * @thumb_alpha).round << 24) | (GRID_COLOR & 0xffffff)
         (1...TILES_X).each do |i|
-          G.window.draw_rect(base_x + i * T_TILE_SIZE - cam_x, base_y - cam_y, 1, ZOOMED_IN_HEIGHT, grid_color, 0)
+          Window.draw_rect(base_x + i * T_TILE_SIZE - cam_x, base_y - cam_y, 1, ZOOMED_IN_HEIGHT, grid_color, 0)
         end
         (1...TILES_Y).each do |j|
-          G.window.draw_rect(base_x - cam_x, base_y + j * T_TILE_SIZE - cam_y, ZOOMED_IN_WIDTH, 1, grid_color, 0)
+          Window.draw_rect(base_x - cam_x, base_y + j * T_TILE_SIZE - cam_y, ZOOMED_IN_WIDTH, 1, grid_color, 0)
         end
 
         wall_color = (@thumb_alpha << 24) | (WALL_COLOR & 0xffffff)
         @drawable_walls.each do |(x, y, rt)|
           if rt
-            G.window.draw_rect(base_x + x + T_TILE_SIZE - cam_x, base_y + y - cam_y, 1, T_TILE_SIZE, wall_color, 0)
+            Window.draw_rect(base_x + x + T_TILE_SIZE - cam_x, base_y + y - cam_y, 1, T_TILE_SIZE, wall_color, 0)
           else
-            G.window.draw_rect(base_x + x - cam_x, base_y + y + T_TILE_SIZE - cam_y, T_TILE_SIZE, 1, wall_color, 0)
+            Window.draw_rect(base_x + x - cam_x, base_y + y + T_TILE_SIZE - cam_y, T_TILE_SIZE, 1, wall_color, 0)
           end
         end
         @passable_blocks.each do |(i, j)|
-          G.window.draw_rect(base_x + i * T_TILE_SIZE + 1 - cam_x, base_y + j * T_TILE_SIZE - cam_y, T_TILE_SIZE - 2, 1, wall_color, 0)
+          Window.draw_rect(base_x + i * T_TILE_SIZE + 1 - cam_x, base_y + j * T_TILE_SIZE - cam_y, T_TILE_SIZE - 2, 1, wall_color, 0)
         end
 
         @marks.each do |(i, j, type)|
           color = (@thumb_alpha << 24) | MARK_COLOR[type]
-          Res.img(type).draw(base_x + i * T_TILE_SIZE - cam_x, base_y + j * T_TILE_SIZE - cam_y, 0, T_SCALE, T_SCALE, color)
+          Image.new(type).draw(base_x + i * T_TILE_SIZE - cam_x, base_y + j * T_TILE_SIZE - cam_y, scale_x: T_SCALE, scale_y: T_SCALE, color: color)
         end
 
         circle.draw(base_x + @start_point[0] * T_TILE_SIZE - cam_x,
                     base_y + @start_point[1] * T_TILE_SIZE - cam_y,
-                    0, T_SCALE, T_SCALE, (@thumb_alpha << 24) | 0xffffff)
+                    scale_x: T_SCALE, scale_y: T_SCALE, color: (@thumb_alpha << 24) | 0xffffff)
       end
 
       if @abbrev_alpha > 0
@@ -166,7 +165,7 @@ module LevelSelect
         alpha = 204 - (rate * 102).round
         circle.draw(zoom * (@x + (TILE_SIZE - scale.to_f / zoom * circle.width) / 2) - cam_x,
                     zoom * (@y + (TILE_SIZE - scale.to_f / zoom * circle.height) / 2) - cam_y,
-                    0, scale, scale, (alpha << 24) | MARK_COLOR[:circle])
+                    scale_x: scale, scale_y: scale, color: (alpha << 24) | MARK_COLOR[:circle])
       end
 
       @selection.draw(map)

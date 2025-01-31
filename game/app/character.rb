@@ -1,9 +1,7 @@
-require_relative 'character_animation'
-require_relative 'constants'
-require_relative 'pusher'
-require_relative 'effect/jump_effect'
-
-include MiniGL
+require 'app/character_animation'
+require 'app/constants'
+require 'app/pusher'
+require 'app/effect/jump_effect'
 
 class Character < GameObject
   include Pusher
@@ -14,7 +12,7 @@ class Character < GameObject
   FRICTION_FACTOR = 0.1
 
   def initialize
-    super(0, 0, TILE_SIZE - 4, TILE_SIZE - 8, :circle, Vector.new(-2, -8))
+    super(0, 0, TILE_SIZE - 4, TILE_SIZE - 8, :circle, img_gap: Vector.new(-2, -8))
     @max_speed.x = 4
     @jump_timer = 0
 
@@ -47,10 +45,10 @@ class Character < GameObject
 
   def update(level)
     forces = Vector.new
-    if KB.key_down?(Gosu::KB_LEFT)
+    if KB.key_down?(:left_arrow)
       forces.x -= MOVE_FORCE
       @particles_left.start if @bottom && !@particles_left.emitting?
-    elsif KB.key_down?(Gosu::KB_RIGHT)
+    elsif KB.key_down?(:right_arrow)
       forces.x += MOVE_FORCE
       @particles_right.start if @bottom && !@particles_right.emitting?
     else
@@ -60,7 +58,7 @@ class Character < GameObject
     end
 
     @jump_timer -= 1 if @jump_timer > 0
-    if KB.key_pressed?(Gosu::KB_UP)
+    if KB.key_pressed?(:up_arrow)
       @jump_timer = 10
     end
     if @bottom && @jump_timer > 0
@@ -91,7 +89,7 @@ class Character < GameObject
 
   def draw
     with_animation_offsets do
-      super(nil, @scale_x, @scale_y)
+      super(scale_x: @scale_x, scale_y: @scale_y)
     end
     @particles_left.draw
     @particles_right.draw

@@ -88,10 +88,10 @@ class EditorLevel < Level
 
   def draw
     (1...@map.size.x).each do |i|
-      G.window.draw_rect(i * TILE_SIZE - 1, 0, 2, SCREEN_HEIGHT, GRID_COLOR, 0)
+      Window.draw_rect(i * TILE_SIZE - 1, 0, 2, SCREEN_HEIGHT, GRID_COLOR, 0)
     end
     (1...@map.size.y).each do |j|
-      G.window.draw_rect(0, j * TILE_SIZE - 1, SCREEN_WIDTH, 2, GRID_COLOR, 0)
+      Window.draw_rect(0, j * TILE_SIZE - 1, SCREEN_WIDTH, 2, GRID_COLOR, 0)
     end
     @map.foreach do |i, j, x, y|
       block = @blocks.any? { |o| o.x == x && o.y == y }
@@ -99,11 +99,11 @@ class EditorLevel < Level
       block_dn = @blocks.any? { |o| o.x == x && o.y == y + TILE_SIZE }
       rt = i < @map.size.x - 1 && ((block && !block_rt) || (!block && block_rt))
       dn = j < @map.size.y - 1 && ((block && !block_dn) || (!block && block_dn))
-      G.window.draw_rect(x + TILE_SIZE - 1, y, 2, TILE_SIZE, WALL_COLOR, 0) if rt
-      G.window.draw_rect(x, y + TILE_SIZE - 1, TILE_SIZE, 2, WALL_COLOR, 0) if dn
+      Window.draw_rect(x + TILE_SIZE - 1, y, 2, TILE_SIZE, WALL_COLOR, 0) if rt
+      Window.draw_rect(x, y + TILE_SIZE - 1, TILE_SIZE, 2, WALL_COLOR, 0) if dn
     end
     @passable_blocks.each do |b|
-      G.window.draw_rect(b.x + 4, b.y - 1, TILE_SIZE - 8, 2, WALL_COLOR, 0)
+      Window.draw_rect(b.x + 4, b.y - 1, TILE_SIZE - 8, 2, WALL_COLOR, 0)
     end
     @marks.each(&:draw)
 
@@ -175,7 +175,7 @@ class Editor < GameWindow
 
   def draw
     @level.draw
-    G.window.draw_rect(SCREEN_WIDTH, 0, 120, SCREEN_HEIGHT, 0x80ffffff)
+    Window.draw_rect(SCREEN_WIDTH, 0, 120, SCREEN_HEIGHT, 0x80ffffff)
     @buttons.each(&:draw)
     Text.write_center(@level_number.to_s, SCREEN_WIDTH + 60, 380)
   end

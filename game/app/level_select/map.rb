@@ -21,7 +21,7 @@ module LevelSelect
     def initialize(last_level)
       @last_level = last_level
 
-      @map = MiniGL::Map.new(ZOOMED_IN_TILE_SIZE, ZOOMED_IN_TILE_SIZE, TILES_X, TILES_Y)
+      @map = ::Map.new(ZOOMED_IN_TILE_SIZE, ZOOMED_IN_TILE_SIZE, TILES_X, TILES_Y)
       # floats to allow smooth interpolation
       @camera_x = @map.cam.x
       @camera_y = @map.cam.y
@@ -84,7 +84,7 @@ module LevelSelect
       end
 
       if @state == :default || @state == :zoomed_out
-        if KB.key_pressed?(Gosu::KB_Z) && @camera_target.nil?
+        if KB.key_pressed?(:z) && @camera_target.nil?
           if @state == :default
             level_under_cursor&.deselect
             @thumbnails.each { |t| t.fade(:out) }
@@ -94,15 +94,15 @@ module LevelSelect
             @character.fade(:out)
             @state = :zooming_in_fade
           end
-        elsif KB.key_pressed?(Gosu::KB_RETURN) || KB.key_pressed?(Gosu::KB_SPACE)
+        elsif KB.key_pressed?(:enter) || KB.key_pressed?(:space)
           @on_select.call(level_under_cursor.id) if @state == :default && level_under_cursor
-        elsif KB.key_pressed?(Gosu::KB_UP) && @cursor_pos[1] > 0
+        elsif KB.key_pressed?(:up_arrow) && @cursor_pos[1] > 0
           move_cursor(:up)
-        elsif KB.key_pressed?(Gosu::KB_RIGHT) && @cursor_pos[0] < TILES_X - 1
+        elsif KB.key_pressed?(:right_arrow) && @cursor_pos[0] < TILES_X - 1
           move_cursor(:rt)
-        elsif KB.key_pressed?(Gosu::KB_DOWN) && @cursor_pos[1] < TILES_Y - 1
+        elsif KB.key_pressed?(:down_arrow) && @cursor_pos[1] < TILES_Y - 1
           move_cursor(:dn)
-        elsif KB.key_pressed?(Gosu::KB_LEFT) && @cursor_pos[0] > 0
+        elsif KB.key_pressed?(:left_arrow) && @cursor_pos[0] > 0
           move_cursor(:lf)
         end
       end
@@ -114,11 +114,11 @@ module LevelSelect
     def draw
       (1...TILES_X).each do |i|
         x = i * @zoom * TILE_SIZE - 1 - @map.cam.x
-        G.window.draw_rect(x, 0, 2, SCREEN_HEIGHT, GRID_COLOR, 0) if x >= -1 && x < SCREEN_WIDTH
+        Window.draw_rect(x, 0, 2, SCREEN_HEIGHT, GRID_COLOR, 0) if x >= -1 && x < SCREEN_WIDTH
       end
       (1...TILES_Y).each do |i|
         y = i * @zoom * TILE_SIZE - 1 - @map.cam.y
-        G.window.draw_rect(0, y, SCREEN_WIDTH, 2, GRID_COLOR, 0) if y >= -1 && y < SCREEN_HEIGHT
+        Window.draw_rect(0, y, SCREEN_WIDTH, 2, GRID_COLOR, 0) if y >= -1 && y < SCREEN_HEIGHT
       end
       @thumbnails.each { |t| t.draw(@map, @zoom) }
       @character.draw(@map, @zoom)

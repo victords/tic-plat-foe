@@ -1,0 +1,6 @@
+devid=victords
+devtitle=Victor David Santos
+gameid=tic-plat-foe
+gametitle=Tic-Plat-Foe
+version=0.1
+icon=metadata/icon.png
