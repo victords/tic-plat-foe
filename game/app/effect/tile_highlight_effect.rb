@@ -25,6 +25,6 @@ class TileHighlightEffect
 
   def draw
     color = (@alpha << 24) | COLOR
-    Window.draw_rect(@x, @y, TILE_SIZE - 2, TILE_SIZE - 2, color)
+    Window.draw_rect(@x, @y, TILE_SIZE - 2, TILE_SIZE - 2, color, -1)
   end
 end

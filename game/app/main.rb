@@ -11,7 +11,7 @@ def tick(args)
 
   Game.update
 
-  Window.begin_draw(0)
+  Window.begin_draw
   Game.draw
   Window.end_draw
 end

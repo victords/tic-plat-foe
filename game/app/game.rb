@@ -57,6 +57,7 @@ class Game
     end
 
     def draw
+      Window.draw_rect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, 0xff000000, -1000)
       @transition&.draw
       if @level
         @level.draw
