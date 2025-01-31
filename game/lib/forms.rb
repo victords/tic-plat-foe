@@ -155,6 +155,7 @@ class Button < Component
     else
       w = options[:w] || 100
       h = options[:h] || 30
+      @draw_rect = options[:draw_rect] != false
     end
 
     super(x, y, w, h, anchor, font, text, text_color, disabled_text_color)
@@ -264,7 +265,7 @@ class Button < Component
         b: b,
         a: alpha
       }
-    else
+    elsif @draw_rect
       rect_color =
         if @enabled
           case @state

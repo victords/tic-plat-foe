@@ -35,7 +35,7 @@ class Level
           when '#'
             @blocks << Block.new(i * TILE_SIZE, j * TILE_SIZE, TILE_SIZE, TILE_SIZE)
           when '-'
-            @passable_blocks << Block.new(i * TILE_SIZE, j * TILE_SIZE, TILE_SIZE, TILE_SIZE, true)
+            @passable_blocks << Block.new(i * TILE_SIZE, j * TILE_SIZE, TILE_SIZE, TILE_SIZE, passable: true)
           when 'o', 'O'
             @marks << Mark.new(:circle, i, j)
             effect_index = add_highlight_effect(i, j, effect_index) if char == 'O'
@@ -66,13 +66,13 @@ class Level
     end
 
     @pause_menu = Panel.new(0, 0, 350, 250, components: [
-      Button.new(0, -50, font: Text.font, text: "Resume", text_color: DEFAULT_TEXT_COLOR, width: 250, height: 40, anchor: :center) do
+      Button.new(0, -50, font: Text.font, text: "Resume", text_color: DEFAULT_TEXT_COLOR, anchor: :center, draw_rect: false) do
         @pause_menu.visible = false
       end,
-      Button.new(0, 0, font: Text.font, text: "Back to level selection", text_color: DEFAULT_TEXT_COLOR, width: 250, height: 40, anchor: :center) do
+      Button.new(0, 0, font: Text.font, text: "Back to level selection", text_color: DEFAULT_TEXT_COLOR, anchor: :center, draw_rect: false) do
         Game.back_to_level_select
       end,
-      Button.new(0, 50, font: Text.font, text: "Back to main menu", text_color: DEFAULT_TEXT_COLOR, width: 250, height: 40, anchor: :center) do
+      Button.new(0, 50, font: Text.font, text: "Back to main menu", text_color: DEFAULT_TEXT_COLOR, anchor: :center, draw_rect: false) do
         Window.close # TODO
       end,
     ], img_path: :panel, img_mode: :tiled, scale_x: 1, scale_y: 1, anchor: :center)
